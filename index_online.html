@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Layanan Pengaduan & Permintaan Data — KGTK Maluku Utara (ONLINE)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    .card-shadow { box-shadow: 0 4px 6px rgba(0,0,0,0.06); }
+    .animate-fade { animation: fadeIn .25s ease-in; }
+    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- ====== CONFIG (EDIT THIS) ====== -->
+  <script>
+    // Ganti ini dengan URL Web App Google Apps Script setelah Anda deploy "Deploy > New Deployment > Web app"
+    // Contoh: const API_BASE = "https://script.google.com/macros/s/AKfycbx....../exec";
+    const API_BASE = "https://script.google.com/macros/s/AKfycbyYCmhsC1iLtWxdYKu_IQTEtjsErgX0YLDgmulPBvHe9a_waBK9bpfFIkvSR5Pl39DR/exec";
+  </script>
+
+  <!-- Header -->
+  <header class="bg-blue-800 text-white">
+    <div class="container mx-auto px-4 py-6 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg" alt="Kemendikbud" class="w-12 h-12 bg-white rounded-full p-1"/>
+        <div>
+          <h1 class="text-xl font-bold">Kantor GTK Provinsi Maluku Utara</h1>
+          <p class="text-blue-100 text-sm">Layanan Pengaduan & Permintaan Data (Online)</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button id="trackBtn" class="bg-white text-blue-700 px-4 py-2 rounded-lg font-medium hover:bg-blue-50">Lacak Status</button>
+        <button id="adminBtn" class="bg-yellow-500 px-4 py-2 rounded-lg font-medium hover:bg-yellow-600">Admin</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg card-shadow mb-8">
+      <div class="flex border-b">
+        <button id="pengaduanTab" class="flex-1 py-4 px-6 text-center font-medium border-b-2 border-blue-600 text-blue-700 bg-blue-50">Pengaduan</button>
+        <button id="permintaanTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50">Permintaan Data</button>
+        <button id="statusTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50">Cek Status</button>
+        <button id="adminTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50 hidden">Admin Panel</button>
+      </div>
+
+      <!-- ============= PENGADUAN ============= -->
+      <div id="pengaduanContent" class="p-6 animate-fade">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Pengaduan</h2>
+        <form id="pengaduanForm" class="space-y-6">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
+              <input id="namaPengadu" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+              <input id="emailPengadu" type="email" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon *</label>
+              <input id="teleponPengadu" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Kategori Pengaduan *</label>
+              <select id="kategoriPengaduan" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">Pilih Kategori</option>
+                <option value="sertifikasi">Sertifikasi Guru</option>
+                <option value="tunjangan">Tunjangan Profesi</option>
+                <option value="mutasi">Mutasi/Perpindahan</option>
+                <option value="promosi">Promosi Jabatan</option>
+                <option value="administrasi">Administrasi Kepegawaian</option>
+                <option value="lainnya">Lainnya</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Judul Pengaduan *</label>
+            <input id="judulPengaduan" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Ringkasan singkat pengaduan Anda"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Detail Pengaduan *</label>
+            <textarea id="detailPengaduan" required rows="5" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Jelaskan detail pengaduan Anda..."></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (URL publik, opsional)</label>
+            <div class="space-y-2" id="pengaduanFiles">
+              <input type="url" class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
+            </div>
+            <button type="button" id="addPengaduanFile" class="text-blue-600 text-sm mt-1">+ Tambah berkas</button>
+          </div>
+
+          <button class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">Kirim Pengaduan</button>
+        </form>
+      </div>
+
+      <!-- ============= PERMINTAAN DATA ============= -->
+      <div id="permintaanContent" class="p-6 hidden">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Permintaan Data</h2>
+        <form id="permintaanForm" class="space-y-6">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
+              <input id="namaPemohon" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+              <input id="emailPemohon" type="email" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon *</label>
+              <input id="teleponPemohon" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Instansi/Organisasi *</label>
+              <input id="instansiPemohon" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Data yang Diminta *</label>
+            <select id="jenisData" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+              <option value="">Pilih Jenis Data</option>
+              <option value="statistik-guru">Statistik Guru</option>
+              <option value="data-sekolah">Data Sekolah</option>
+              <option value="sertifikasi">Data Sertifikasi</option>
+              <option value="tunjangan">Data Tunjangan</option>
+              <option value="mutasi">Data Mutasi</option>
+              <option value="lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tujuan Penggunaan Data *</label>
+            <textarea id="tujuanData" required rows="3" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Detail Permintaan Data *</label>
+            <textarea id="detailPermintaan" required rows="4" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Surat Permohonan Resmi (URL publik) *</label>
+            <input id="suratUrl" type="url" required class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (URL publik, opsional)</label>
+            <div class="space-y-2" id="permintaanFiles">
+              <input type="url" class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
+            </div>
+            <button type="button" id="addPermintaanFile" class="text-blue-600 text-sm mt-1">+ Tambah berkas</button>
+          </div>
+
+          <button class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700">Kirim Permintaan Data</button>
+        </form>
+      </div>
+
+      <!-- ============= CEK STATUS ============= -->
+      <div id="statusContent" class="p-6 hidden">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Lacak Status Pengajuan</h2>
+        <div class="max-w-md mx-auto">
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Tiket</label>
+            <div class="flex gap-2">
+              <input id="nomorTiket" class="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="GTKXXXXXXXXX"/>
+              <button id="cekStatusBtn" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700">Cek Status</button>
+            </div>
+          </div>
+          <pre id="statusResult" class="hidden bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-auto"></pre>
+        </div>
+      </div>
+
+      <!-- ============= ADMIN ============= -->
+      <div id="adminContent" class="p-6 hidden">
+        <div id="adminLogin" class="max-w-sm mx-auto">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login Admin</h2>
+          <form id="loginForm" class="space-y-4">
+            <input id="adminUser" placeholder="Username" class="w-full px-4 py-3 border rounded-lg" required/>
+            <input id="adminPass" type="password" placeholder="Password" class="w-full px-4 py-3 border rounded-lg" required/>
+            <button class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700">Login</button>
+          </form>
+          <p class="text-xs text-gray-500 mt-3 text-center">Kredensial diatur di Script Properties.</p>
+        </div>
+
+        <div id="adminDash" class="hidden">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Dashboard Admin</h2>
+            <div class="flex gap-2">
+              <button id="refreshBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Refresh</button>
+              <button id="logoutBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg">Logout</button>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-3 mb-3 grid md:grid-cols-3 gap-2">
+            <select id="filterType" class="px-3 py-2 border rounded-lg text-sm">
+              <option value="">Semua Jenis</option>
+              <option value="pengaduan">Pengaduan</option>
+              <option value="permintaan">Permintaan Data</option>
+            </select>
+            <select id="filterStatus" class="px-3 py-2 border rounded-lg text-sm">
+              <option value="">Semua Status</option>
+              <option value="diterima">Diterima</option>
+              <option value="diproses">Diproses</option>
+              <option value="selesai">Selesai</option>
+            </select>
+            <input id="searchInput" placeholder="Cari nama/email/tiket..." class="px-3 py-2 border rounded-lg text-sm"/>
+          </div>
+
+          <div class="bg-white rounded-lg overflow-hidden border">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="px-3 py-2 text-left">Tiket</th>
+                  <th class="px-3 py-2 text-left">Jenis</th>
+                  <th class="px-3 py-2 text-left">Nama</th>
+                  <th class="px-3 py-2 text-left">Email</th>
+                  <th class="px-3 py-2 text-left">Tanggal</th>
+                  <th class="px-3 py-2 text-left">Status</th>
+                  <th class="px-3 py-2 text-left">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody"></tbody>
+            </table>
+            <div id="noDataMessage" class="text-center text-gray-500 py-6 hidden">Tidak ada data</div>
+          </div>
+
+          <!-- Update Modal -->
+          <dialog id="updateDialog" class="rounded-lg p-0 w-full max-w-md">
+            <form method="dialog" class="p-4 space-y-3">
+              <h3 class="text-lg font-semibold">Update Status</h3>
+              <input id="updTicket" type="hidden"/>
+              <label class="block text-sm">Status Baru</label>
+              <select id="updStatus" class="w-full px-3 py-2 border rounded-lg">
+                <option value="diterima">Diterima</option>
+                <option value="diproses">Sedang Diproses</option>
+                <option value="selesai">Selesai</option>
+              </select>
+              <label class="block text-sm mt-2">Catatan *</label>
+              <textarea id="updNote" rows="3" class="w-full px-3 py-2 border rounded-lg" required></textarea>
+              <label class="block text-sm mt-2">Dokumen Tambahan (URL publik, opsional)</label>
+              <input id="updDocUrl" class="w-full px-3 py-2 border rounded-lg"/>
+              <menu class="flex gap-2 justify-end mt-3">
+                <button id="updCancel" class="px-4 py-2 rounded bg-gray-200">Batal</button>
+                <button id="updSubmit" class="px-4 py-2 rounded bg-blue-600 text-white">Update</button>
+              </menu>
+            </form>
+          </dialog>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-lg card-shadow p-6 text-center">
+        <div class="text-3xl mb-3">⚡</div>
+        <h3 class="font-semibold text-gray-800 mb-1">Respon Cepat</h3>
+        <p class="text-sm text-gray-600">Pengaduan direspon maksimal 2×24 jam</p>
+      </div>
+      <div class="bg-white rounded-lg card-shadow p-6 text-center">
+        <div class="text-3xl mb-3">🔒</div>
+        <h3 class="font-semibold text-gray-800 mb-1">Data Aman</h3>
+        <p class="text-sm text-gray-600">Disimpan di Google Sheet Anda (internal)</p>
+      </div>
+      <div class="bg-white rounded-lg card-shadow p-6 text-center">
+        <div class="text-3xl mb-3">📧</div>
+        <h3 class="font-semibold text-gray-800 mb-1">Notifikasi Email</h3>
+        <p class="text-sm text-gray-600">Dikirim otomatis dari Apps Script</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-gray-900 text-white mt-10">
+    <div class="container mx-auto px-4 py-6 text-center text-sm text-gray-300">
+      © 2025 KGTK Maluku Utara
+    </div>
+  </footer>
+
+  <script>
+    // ====== Tab Nav ======
+    const tabs = {
+      pengaduan: { tab: document.getElementById("pengaduanTab"), content: document.getElementById("pengaduanContent") },
+      permintaan: { tab: document.getElementById("permintaanTab"), content: document.getElementById("permintaanContent") },
+      status: { tab: document.getElementById("statusTab"), content: document.getElementById("statusContent") },
+      admin: { tab: document.getElementById("adminTab"), content: document.getElementById("adminContent") },
+    };
+    function switchTab(key){
+      Object.keys(tabs).forEach(k => {
+        const {tab, content} = tabs[k];
+        if(k===key){ tab.classList.add("border-b-2","border-blue-600","text-blue-700","bg-blue-50"); content.classList.remove("hidden"); }
+        else{ tab.classList.remove("border-b-2","border-blue-600","text-blue-700","bg-blue-50"); content.classList.add("hidden"); }
+      });
+    }
+    tabs.pengaduan.tab.onclick = () => switchTab("pengaduan");
+    tabs.permintaan.tab.onclick = () => switchTab("permintaan");
+    tabs.status.tab.onclick = () => switchTab("status");
+    tabs.admin.tab.onclick = () => switchTab("admin");
+    document.getElementById("trackBtn").onclick = () => switchTab("status");
+    document.getElementById("adminBtn").onclick = () => { document.getElementById("adminTab").classList.remove("hidden"); switchTab("admin"); };
+
+    // ====== Helpers ======
+    function val(id){ return document.getElementById(id).value.trim(); }
+    function collectUrls(containerId){
+      return [...document.getElementById(containerId).querySelectorAll("input[type=url]")]
+        .map(i => i.value.trim()).filter(Boolean);
+    }
+    function addFileInput(btnId, containerId){
+      document.getElementById(btnId).onclick = () => {
+        const div = document.createElement("div");
+        div.innerHTML = '<input type="url" class="w-full px-4 py-3 border rounded-lg" placeholder="https://..."/>';
+        document.getElementById(containerId).appendChild(div);
+      };
+    }
+    addFileInput("addPengaduanFile", "pengaduanFiles");
+    addFileInput("addPermintaanFile", "permintaanFiles");
+
+    // ====== Submit Pengaduan ======
+    document.getElementById("pengaduanForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const payload = {
+        action: "submit",
+        type: "pengaduan",
+        nama: val("namaPengadu"),
+        email: val("emailPengadu"),
+        telepon: val("teleponPengadu"),
+        kategori: val("kategoriPengaduan"),
+        judul: val("judulPengaduan"),
+        detail: val("detailPengaduan"),
+        berkas: collectUrls("pengaduanFiles"),
+      };
+      const res = await fetch(API_BASE, { method:"POST", body: JSON.stringify(payload) });
+      const data = await res.json();
+      if(!res.ok) return alert(data.error || "Gagal mengirim.");
+      alert("Berhasil! Nomor tiket: " + data.ticket);
+      switchTab("status"); document.getElementById("nomorTiket").value = data.ticket;
+    });
+
+    // ====== Submit Permintaan Data ======
+    document.getElementById("permintaanForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const payload = {
+        action: "submit",
+        type: "permintaan",
+        nama: val("namaPemohon"),
+        email: val("emailPemohon"),
+        telepon: val("teleponPemohon"),
+        instansi: val("instansiPemohon"),
+        jenisData: val("jenisData"),
+        tujuan: val("tujuanData"),
+        detail: val("detailPermintaan"),
+        suratUrl: val("suratUrl"),
+        berkas: collectUrls("permintaanFiles"),
+      };
+      const res = await fetch(API_BASE, { method:"POST", body: JSON.stringify(payload) });
+      const data = await res.json();
+      if(!res.ok) return alert(data.error || "Gagal mengirim.");
+      alert("Berhasil! Nomor tiket: " + data.ticket);
+      switchTab("status"); document.getElementById("nomorTiket").value = data.ticket;
+    });
+
+    // ====== Cek Status Publik ======
+    document.getElementById("cekStatusBtn").onclick = async ()=>{
+      const ticket = val("nomorTiket");
+      if(!ticket) return alert("Masukkan nomor tiket.");
+      const url = API_BASE + "?action=status&ticket=" + encodeURIComponent(ticket);
+      const res = await fetch(url);
+      const data = await res.json();
+      if(!res.ok) return alert(data.error || "Tiket tidak ditemukan.");
+      const pretty = JSON.stringify(data, null, 2);
+      const box = document.getElementById("statusResult");
+      box.textContent = pretty; box.classList.remove("hidden");
+    };
+
+    // ====== Admin Auth + List ======
+    let ADMIN_TOKEN = "";
+    document.getElementById("loginForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const res = await fetch(API_BASE, { method:"POST", body: JSON.stringify({ action:"admin_login", user: val("adminUser"), pass: val("adminPass") })});
+      const data = await res.json();
+      if(!res.ok) return alert(data.error || "Login gagal.");
+      ADMIN_TOKEN = data.token;
+      document.getElementById("adminLogin").classList.add("hidden");
+      document.getElementById("adminDash").classList.remove("hidden");
+      loadAdmin();
+    });
+    document.getElementById("logoutBtn").onclick = ()=>{
+      ADMIN_TOKEN = ""; document.getElementById("adminDash").classList.add("hidden"); document.getElementById("adminLogin").classList.remove("hidden");
+    };
+    document.getElementById("refreshBtn").onclick = loadAdmin;
+    document.getElementById("filterType").onchange = loadAdmin;
+    document.getElementById("filterStatus").onchange = loadAdmin;
+    document.getElementById("searchInput").oninput = ()=>{ loadAdmin(250); };
+
+    let searchDelay;
+    async function loadAdmin(delay=0){
+      clearTimeout(searchDelay);
+      searchDelay = setTimeout(async ()=>{
+        const params = new URLSearchParams({
+          action: "admin_list",
+          token: ADMIN_TOKEN,
+          type: document.getElementById("filterType").value,
+          status: document.getElementById("filterStatus").value,
+          q: document.getElementById("searchInput").value.trim(),
+        });
+        const res = await fetch(API_BASE + "?" + params.toString());
+        const data = await res.json();
+        if(!res.ok) { alert(data.error || "Gagal memuat data."); return; }
+        renderTable(data.items || []);
+      }, delay);
+    }
+
+    function renderTable(items){
+      const tbody = document.getElementById("dataTableBody");
+      const noData = document.getElementById("noDataMessage");
+      if(!items.length){ tbody.innerHTML = ""; noData.classList.remove("hidden"); return; }
+      noData.classList.add("hidden");
+      tbody.innerHTML = items.map(it => {
+        const badge = it.status==="selesai" ? "bg-green-100 text-green-800" :
+                      it.status==="diproses" ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800";
+        return `<tr class="hover:bg-gray-50">
+          <td class="px-3 py-2 font-mono text-blue-700">${it.ticket}</td>
+          <td class="px-3 py-2">${it.type}</td>
+          <td class="px-3 py-2 font-medium">${it.nama}</td>
+          <td class="px-3 py-2">${it.email}</td>
+          <td class="px-3 py-2">${it.date}</td>
+          <td class="px-3 py-2"><span class="px-2 py-1 rounded ${badge} text-xs">${it.status}</span></td>
+          <td class="px-3 py-2"><button class="text-blue-600 text-xs underline" onclick="openUpdate('${it.ticket}','${it.status}')">Update</button></td>
+        </tr>`;
+      }).join("");
+    }
+
+    // ====== Update Status ======
+    const dlg = document.getElementById("updateDialog");
+    document.getElementById("updCancel").onclick = ()=> dlg.close();
+    document.getElementById("updSubmit").onclick = async (e)=>{
+      e.preventDefault();
+      const payload = {
+        action: "admin_update",
+        token: ADMIN_TOKEN,
+        ticket: document.getElementById("updTicket").value,
+        newStatus: document.getElementById("updStatus").value,
+        note: document.getElementById("updNote").value.trim(),
+        docUrl: document.getElementById("updDocUrl").value.trim(),
+      };
+      const res = await fetch(API_BASE, { method:"POST", body: JSON.stringify(payload) });
+      const data = await res.json();
+      if(!res.ok) return alert(data.error || "Gagal update.");
+      dlg.close(); loadAdmin();
+      alert("Status diperbarui & email terkirim.");
+    };
+
+    window.openUpdate = (ticket, status)=>{
+      document.getElementById("updTicket").value = ticket;
+      document.getElementById("updStatus").value = status;
+      document.getElementById("updNote").value = "";
+      document.getElementById("updDocUrl").value = "";
+      dlg.showModal();
+    };
+  </script>
+</body>
+</html>

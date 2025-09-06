@@ -15,9 +15,9 @@
 <body class="bg-gray-50 min-h-screen">
   <!-- ====== CONFIG (EDIT THIS) ====== -->
   <script>
-    // Ganti ini dengan URL Web App Google Apps Script setelah Anda deploy "Deploy > New Deployment > Web app"
+    // GANTI dengan URL Web App Google Apps Script setelah deploy (Deploy > New Deployment > Web app)
     // Contoh: const API_BASE = "https://script.google.com/macros/s/AKfycbx....../exec";
-    const API_BASE = "https://script.google.com/macros/s/AKfycbzPhrnfJGYmauUSIEure6rMuoHTqkeryHhO0goy3Od8fo1r5h7UNZbyAx63wyREMCHp/exec";
+    const API_BASE = "https://script.google.com/macros/s/AKfycbwTuxq-rLYus4BG-gMakQ4kvhS-3FXPfX1LXKzfJHX-5pnVSAjtvCtFO5F3HwPeeai9/exec";
   </script>
 
   <!-- Header -->
@@ -332,9 +332,10 @@
         detail: val("detailPengaduan"),
         berkas: collectUrls("pengaduanFiles"),
       };
-      const res = await fetch(API_BASE, { method:"POST", body: JSON.stringify(payload) });
-      const data = await res.json();
-      if(!res.ok) return alert(data.error || "Gagal mengirim.");
+      const res = await fetch(API_BASE, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      let data = {};
+      try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
+      if(data.error) { alert(data.error); return; }
       alert("Berhasil! Nomor tiket: " + data.ticket);
       switchTab("status"); document.getElementById("nomorTiket").value = data.ticket;
     });
@@ -355,9 +356,10 @@
         suratUrl: val("suratUrl"),
         berkas: collectUrls("permintaanFiles"),
       };
-      const res = await fetch(API_BASE, { method:"POST", body: JSON.stringify(payload) });
-      const data = await res.json();
-      if(!res.ok) return alert(data.error || "Gagal mengirim.");
+      const res = await fetch(API_BASE, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      let data = {};
+      try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
+      if(data.error) { alert(data.error); return; }
       alert("Berhasil! Nomor tiket: " + data.ticket);
       switchTab("status"); document.getElementById("nomorTiket").value = data.ticket;
     });
@@ -368,8 +370,9 @@
       if(!ticket) return alert("Masukkan nomor tiket.");
       const url = API_BASE + "?action=status&ticket=" + encodeURIComponent(ticket);
       const res = await fetch(url);
-      const data = await res.json();
-      if(!res.ok) return alert(data.error || "Tiket tidak ditemukan.");
+      let data = {};
+      try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
+      if(data.error) { alert(data.error || "Tiket tidak ditemukan."); return; }
       const pretty = JSON.stringify(data, null, 2);
       const box = document.getElementById("statusResult");
       box.textContent = pretty; box.classList.remove("hidden");
@@ -379,9 +382,10 @@
     let ADMIN_TOKEN = "";
     document.getElementById("loginForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
-      const res = await fetch(API_BASE, { method:"POST", body: JSON.stringify({ action:"admin_login", user: val("adminUser"), pass: val("adminPass") })});
-      const data = await res.json();
-      if(!res.ok) return alert(data.error || "Login gagal.");
+      const res = await fetch(API_BASE, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify({ action:"admin_login", user: val("adminUser"), pass: val("adminPass") })});
+      let data = {};
+      try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
+      if(data.error) { alert(data.error || "Login gagal."); return; }
       ADMIN_TOKEN = data.token;
       document.getElementById("adminLogin").classList.add("hidden");
       document.getElementById("adminDash").classList.remove("hidden");
@@ -407,8 +411,9 @@
           q: document.getElementById("searchInput").value.trim(),
         });
         const res = await fetch(API_BASE + "?" + params.toString());
-        const data = await res.json();
-        if(!res.ok) { alert(data.error || "Gagal memuat data."); return; }
+        let data = {};
+        try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
+        if(data.error) { alert(data.error || "Gagal memuat data."); return; }
         renderTable(data.items || []);
       }, delay);
     }
@@ -446,9 +451,10 @@
         note: document.getElementById("updNote").value.trim(),
         docUrl: document.getElementById("updDocUrl").value.trim(),
       };
-      const res = await fetch(API_BASE, { method:"POST", body: JSON.stringify(payload) });
-      const data = await res.json();
-      if(!res.ok) return alert(data.error || "Gagal update.");
+      const res = await fetch(API_BASE, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      let data = {};
+      try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
+      if(data.error) { alert(data.error || "Gagal update."); return; }
       dlg.close(); loadAdmin();
       alert("Status diperbarui & email terkirim.");
     };

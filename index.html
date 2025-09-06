@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Layanan Pengaduan & Permintaan Data — KGTK Maluku Utara (ONLINE)</title>
+  <title>Layanan Pengaduan & Permintaan Data — KGTK Maluku Utara (UPLOADS)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
@@ -13,21 +13,18 @@
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-  <!-- ====== CONFIG (EDIT THIS) ====== -->
   <script>
-    // GANTI dengan URL Web App Google Apps Script setelah deploy (Deploy > New Deployment > Web app)
-    // Contoh: const API_BASE = "https://script.google.com/macros/s/AKfycbx....../exec";
-    const API_BASE = "https://script.google.com/macros/s/AKfycbwTuxq-rLYus4BG-gMakQ4kvhS-3FXPfX1LXKzfJHX-5pnVSAjtvCtFO5F3HwPeeai9/exec";
+    // GANTI ini dengan URL Web App Google Apps Script (akhiran /exec)
+    const API_BASE = "PASTE_YOUR_GAS_WEB_APP_URL_HERE";
   </script>
 
-  <!-- Header -->
   <header class="bg-blue-800 text-white">
     <div class="container mx-auto px-4 py-6 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <img src="https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg" alt="Kemendikbud" class="w-12 h-12 bg-white rounded-full p-1"/>
         <div>
           <h1 class="text-xl font-bold">Kantor GTK Provinsi Maluku Utara</h1>
-          <p class="text-blue-100 text-sm">Layanan Pengaduan & Permintaan Data (Online)</p>
+          <p class="text-blue-100 text-sm">Layanan Pengaduan & Permintaan Data — unggah berkas ke Drive</p>
         </div>
       </div>
       <div class="flex gap-2">
@@ -46,7 +43,7 @@
         <button id="adminTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50 hidden">Admin Panel</button>
       </div>
 
-      <!-- ============= PENGADUAN ============= -->
+      <!-- Pengaduan -->
       <div id="pengaduanContent" class="p-6 animate-fade">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Pengaduan</h2>
         <form id="pengaduanForm" class="space-y-6">
@@ -87,19 +84,19 @@
             <textarea id="detailPengaduan" required rows="5" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Jelaskan detail pengaduan Anda..."></textarea>
           </div>
 
+          <!-- FILE UPLOAD -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (URL publik, opsional)</label>
-            <div class="space-y-2" id="pengaduanFiles">
-              <input type="url" class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
-            </div>
-            <button type="button" id="addPengaduanFile" class="text-blue-600 text-sm mt-1">+ Tambah berkas</button>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (unggah, opsional)</label>
+            <input id="filesPengaduan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" 
+                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip"/>
+            <p class="text-xs text-gray-500 mt-1">Anda bisa memilih beberapa file sekaligus. Ukuran total disarankan &lt; 20MB.</p>
           </div>
 
           <button class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">Kirim Pengaduan</button>
         </form>
       </div>
 
-      <!-- ============= PERMINTAAN DATA ============= -->
+      <!-- Permintaan Data -->
       <div id="permintaanContent" class="p-6 hidden">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Permintaan Data</h2>
         <form id="permintaanForm" class="space-y-6">
@@ -144,23 +141,25 @@
             <textarea id="detailPermintaan" required rows="4" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
           </div>
 
+          <!-- Tetap URL surat (biar sederhana) -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Surat Permohonan Resmi (URL publik) *</label>
             <input id="suratUrl" type="url" required class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
           </div>
+
+          <!-- FILE UPLOAD -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (URL publik, opsional)</label>
-            <div class="space-y-2" id="permintaanFiles">
-              <input type="url" class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
-            </div>
-            <button type="button" id="addPermintaanFile" class="text-blue-600 text-sm mt-1">+ Tambah berkas</button>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (unggah, opsional)</label>
+            <input id="filesPermintaan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" 
+                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip"/>
+            <p class="text-xs text-gray-500 mt-1">Anda bisa memilih beberapa file sekaligus. Ukuran total disarankan &lt; 20MB.</p>
           </div>
 
           <button class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700">Kirim Permintaan Data</button>
         </form>
       </div>
 
-      <!-- ============= CEK STATUS ============= -->
+      <!-- Cek Status -->
       <div id="statusContent" class="p-6 hidden">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Lacak Status Pengajuan</h2>
         <div class="max-w-md mx-auto">
@@ -175,7 +174,7 @@
         </div>
       </div>
 
-      <!-- ============= ADMIN ============= -->
+      <!-- Admin -->
       <div id="adminContent" class="p-6 hidden">
         <div id="adminLogin" class="max-w-sm mx-auto">
           <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login Admin</h2>
@@ -253,25 +252,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Info Cards -->
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="bg-white rounded-lg card-shadow p-6 text-center">
-        <div class="text-3xl mb-3">⚡</div>
-        <h3 class="font-semibold text-gray-800 mb-1">Respon Cepat</h3>
-        <p class="text-sm text-gray-600">Pengaduan direspon maksimal 2×24 jam</p>
-      </div>
-      <div class="bg-white rounded-lg card-shadow p-6 text-center">
-        <div class="text-3xl mb-3">🔒</div>
-        <h3 class="font-semibold text-gray-800 mb-1">Data Aman</h3>
-        <p class="text-sm text-gray-600">Disimpan di Google Sheet Anda (internal)</p>
-      </div>
-      <div class="bg-white rounded-lg card-shadow p-6 text-center">
-        <div class="text-3xl mb-3">📧</div>
-        <h3 class="font-semibold text-gray-800 mb-1">Notifikasi Email</h3>
-        <p class="text-sm text-gray-600">Dikirim otomatis dari Apps Script</p>
-      </div>
-    </div>
   </main>
 
   <footer class="bg-gray-900 text-white mt-10">
@@ -304,21 +284,8 @@
 
     // ====== Helpers ======
     function val(id){ return document.getElementById(id).value.trim(); }
-    function collectUrls(containerId){
-      return [...document.getElementById(containerId).querySelectorAll("input[type=url]")]
-        .map(i => i.value.trim()).filter(Boolean);
-    }
-    function addFileInput(btnId, containerId){
-      document.getElementById(btnId).onclick = () => {
-        const div = document.createElement("div");
-        div.innerHTML = '<input type="url" class="w-full px-4 py-3 border rounded-lg" placeholder="https://..."/>';
-        document.getElementById(containerId).appendChild(div);
-      };
-    }
-    addFileInput("addPengaduanFile", "pengaduanFiles");
-    addFileInput("addPermintaanFile", "permintaanFiles");
 
-    // ====== Submit Pengaduan ======
+    // ====== Submit Pengaduan (FormData, multipart) ======
     document.getElementById("pengaduanForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       const payload = {
@@ -330,17 +297,22 @@
         kategori: val("kategoriPengaduan"),
         judul: val("judulPengaduan"),
         detail: val("detailPengaduan"),
-        berkas: collectUrls("pengaduanFiles"),
       };
-      const res = await fetch(API_BASE, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-      let data = {};
-      try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
-      if(data.error) { alert(data.error); return; }
+      const fd = new FormData();
+      fd.append("payload", JSON.stringify(payload));
+      const files = document.getElementById("filesPengaduan").files;
+      for (const f of files) fd.append("files[]", f, f.name);
+
+      let res, data;
+      try { res = await fetch(API_BASE, { method:"POST", body: fd }); }
+      catch(err){ alert("Gagal mengirim ke server."); return; }
+      try { data = await res.json(); } catch(e){ alert("Gagal membaca respons server."); return; }
+      if(data.error){ alert(data.error); return; }
       alert("Berhasil! Nomor tiket: " + data.ticket);
       switchTab("status"); document.getElementById("nomorTiket").value = data.ticket;
     });
 
-    // ====== Submit Permintaan Data ======
+    // ====== Submit Permintaan Data (FormData, multipart) ======
     document.getElementById("permintaanForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       const payload = {
@@ -354,24 +326,29 @@
         tujuan: val("tujuanData"),
         detail: val("detailPermintaan"),
         suratUrl: val("suratUrl"),
-        berkas: collectUrls("permintaanFiles"),
       };
-      const res = await fetch(API_BASE, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-      let data = {};
-      try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
-      if(data.error) { alert(data.error); return; }
+      const fd = new FormData();
+      fd.append("payload", JSON.stringify(payload));
+      const files = document.getElementById("filesPermintaan").files;
+      for (const f of files) fd.append("files[]", f, f.name);
+
+      let res, data;
+      try { res = await fetch(API_BASE, { method:"POST", body: fd }); }
+      catch(err){ alert("Gagal mengirim ke server."); return; }
+      try { data = await res.json(); } catch(e){ alert("Gagal membaca respons server."); return; }
+      if(data.error){ alert(data.error); return; }
       alert("Berhasil! Nomor tiket: " + data.ticket);
       switchTab("status"); document.getElementById("nomorTiket").value = data.ticket;
     });
 
     // ====== Cek Status Publik ======
     document.getElementById("cekStatusBtn").onclick = async ()=>{
-      const ticket = val("nomorTiket");
+      const ticket = document.getElementById("nomorTiket").value.trim();
       if(!ticket) return alert("Masukkan nomor tiket.");
       const url = API_BASE + "?action=status&ticket=" + encodeURIComponent(ticket);
-      const res = await fetch(url);
-      let data = {};
-      try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
+      let res, data;
+      try { res = await fetch(url); } catch(e){ alert("Gagal menghubungi server."); return; }
+      try { data = await res.json(); } catch(e){ alert("Gagal membaca respons server."); return; }
       if(data.error) { alert(data.error || "Tiket tidak ditemukan."); return; }
       const pretty = JSON.stringify(data, null, 2);
       const box = document.getElementById("statusResult");
@@ -382,7 +359,7 @@
     let ADMIN_TOKEN = "";
     document.getElementById("loginForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
-      const res = await fetch(API_BASE, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify({ action:"admin_login", user: val("adminUser"), pass: val("adminPass") })});
+      const res = await fetch(API_BASE, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify({ action:"admin_login", user: document.getElementById("adminUser").value.trim(), pass: document.getElementById("adminPass").value.trim() })});
       let data = {};
       try { data = await res.json(); } catch(e) { alert("Gagal membaca respons server."); return; }
       if(data.error) { alert(data.error || "Login gagal."); return; }

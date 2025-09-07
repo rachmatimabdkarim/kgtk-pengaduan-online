@@ -514,7 +514,7 @@
           return `<li class="mb-1 flex items-center gap-2">
             <a class="text-blue-700 underline" href="${f.viewUrl}" target="_blank" rel="noopener">${escapeHtml(f.name || f.id)}</a>
             <span class="text-gray-400 text-xs">(${formatBytes(f.size)})</span>
-            ${usePreview?`<button class="btn text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300" onclick="previewFile('${id}','${mime}','${escapeHtml(f.name||"")}')">Preview</button>`:""}
+            ${usePreview?`<button class="btn text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300" type="button" onclick="previewFile('${id}','${mime}','${escapeHtml(f.name||"")}', event)">Preview</button>`:""}
           </li>`;
         }).join("") || "<li class='text-gray-500'>Tidak ada berkas</li>";
         const historyHtml = (data.history||[]).map(h=>`<li class="mb-1"><span class="font-medium">${h.status}</span> — <span class="text-gray-600">${new Date(h.timestamp).toLocaleString("id-ID")}</span><div class="text-gray-700">${escapeHtml(h.note||"")}</div></li>`).join("") || "<li class='text-gray-500'>Belum ada riwayat</li>";
@@ -562,7 +562,8 @@
     function stext(t){ return String(t||"").replace(/[<>]/g,""); }
 
     // FIX FLICKER: mount iframe exactly once; never remove/replace onload
-    window.previewFile = (id, mime, name) => {
+    window.previewFile = (id, mime, name, ev) => {
+      if (ev) { try { ev.preventDefault(); ev.stopPropagation(); } catch(_){} }
       const wrap = document.querySelector("#pvBody .preview-wrap");
       const overlay = wrap.querySelector(".preview-overlay");
       const oldIframe = wrap.querySelector("iframe.preview-iframe");

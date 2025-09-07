@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Layanan Informasi & Pengaduan — KGTK Maluku Utara (r13)</title>
+  <title>Layanan Informasi & Pengaduan — KGTK Maluku Utara (r14)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
@@ -19,8 +19,8 @@
 <body class="bg-gray-50 min-h-screen">
   <script>
     // GANTI dengan URL Web App (akhiran /exec)
-    const API_BASE = "https://script.google.com/macros/s/AKfycbwYlNhtkr-O-IJ_lzgJqSLIp3g68-_1D0GQ201L-x-zxXM0J8OccwFqYyW19LL2iq8k/exec";
-    const API_VERSION = "v2025-09-07-r13";
+    const API_BASE = "https://script.google.com/macros/s/AKfycbzx-IZ6xuZINig2H8PKip28OC5B4_XwKsHmUSJ2XQPhB9XvrA3xUeEdFP6sEqCostuw/exec";
+    const API_VERSION = "v2025-09-07-r14";
     const withNoCache = (url) => url + (url.includes("?") ? "&" : "?") + "_=" + encodeURIComponent(API_VERSION + "-" + Date.now());
 
     function fileToBase64(file){
@@ -243,8 +243,9 @@
               <textarea id="tujuan" rows="3" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Surat Permohonan Resmi (URL publik) *</label>
-              <input id="suratUrl" type="url" class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Surat Permohonan Resmi (unggah dokumen) *</label>
+              <input id="suratFile" type="file" class="w-full px-4 py-3 border rounded-lg bg-white" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"/>
+              <p class="text-xs text-gray-500 mt-1">Unggah surat resmi (PDF disarankan). Maks 10MB.</p>
             </div>
           </div>
 
@@ -448,7 +449,7 @@
     const instansiEl = document.getElementById("instansi");
     const jenisDataEl = document.getElementById("jenisData");
     const tujuanEl = document.getElementById("tujuan");
-    const suratUrlEl = document.getElementById("suratUrl");
+    const suratFileEl = document.getElementById("suratFile");
     const kategoriKeluhanEl = document.getElementById("kategoriKeluhan");
 
     function updateTipeUI(){
@@ -457,7 +458,7 @@
       const isKeluhan = (tipe === "Keluhan & Kendala");
       secPermintaan.classList.toggle("hidden", !isPermintaan);
       secKeluhan.classList.toggle("hidden", !isKeluhan);
-      [instansiEl, jenisDataEl, tujuanEl, suratUrlEl].forEach(el => { if(!el) return; el.required = isPermintaan; });
+      [instansiEl, jenisDataEl, tujuanEl, suratFileEl].forEach(el => { if(!el) return; el.required = isPermintaan; });
       if (kategoriKeluhanEl) kategoriKeluhanEl.required = isKeluhan;
     }
     tipeEl.addEventListener("change", updateTipeUI);
@@ -469,13 +470,16 @@
       const meta = [
         ["Kab/Kota", val("kabkota")],
         ["Peran", val("peran")],
-        ["Tipe Laporan", val("tipeLaporan")],
-        ["Layanan", val("layananJenis")]
-      ].map(([k,v]) => `[Meta] ${k}: ${v}`).join("\n");
-      return meta + "\n\n" + baseDetail;
+        ["Tipe Laporan", document.getElementById("tipeLaporan").value],
+        ["Layanan", document.getElementById("layananJenis").value]
+      ].map(([k,v]) => `[Meta] ${k}: ${v}`).join("
+");
+      return meta + "
+
+" + baseDetail;
     }
     function deriveType(){
-      return (val("tipeLaporan") === "Permintaan") ? "permintaan" : "pengaduan";
+      return (document.getElementById("tipeLaporan").value === "Permintaan") ? "permintaan" : "pengaduan";
     }
 
     // Submit
@@ -484,9 +488,15 @@
       const btn = e.submitter;
       await withBusy(btn, "Mengirim...", async ()=>{
         const filesB64 = await collectFilesB64(document.getElementById("filesLayanan"));
-        const tipe = val("tipeLaporan");
+        const tipe = document.getElementById("tipeLaporan").value;
         const isPermintaan = (tipe === "Permintaan");
         const isKeluhan = (tipe === "Keluhan & Kendala");
+
+        let suratB64 = null;
+        if (isPermintaan && suratFileEl && suratFileEl.files && suratFileEl.files[0]) {
+          suratB64 = await fileToBase64(suratFileEl.files[0]);
+        }
+
         const basePayload = {
           action: "submit",
           type: deriveType(),
@@ -497,12 +507,12 @@
           detail: buildDetailWithMeta(val("detail")),
           filesB64
         };
-        if (isKeluhan) basePayload.kategori = val("kategoriKeluhan");
+        if (isKeluhan) basePayload.kategori = document.getElementById("kategoriKeluhan").value;
         if (isPermintaan) {
           basePayload.instansi = val("instansi");
           basePayload.jenisData = val("jenisData");
           basePayload.tujuan = val("tujuan");
-          basePayload.suratUrl = val("suratUrl");
+          if (suratB64) basePayload.suratB64 = suratB64;
         }
         let data;
         try { data = await postJSONNoPreflight(basePayload); }
@@ -731,6 +741,7 @@
       overlay.style.display = "flex";
       wrap.appendChild(iframe);
     };
+
   </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Layanan Pengaduan & Permintaan Data — KGTK Maluku Utara (UPLOADS r8)</title>
+  <title>Layanan Pengaduan & Permintaan Data — KGTK Maluku Utara (UPLOADS r10)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
@@ -11,7 +11,6 @@
     .animate-fade { animation: fadeIn .25s ease-in; }
     @keyframes fadeIn { from {opacity:0} to {opacity:1} }
     .btn[disabled]{ opacity:.6; cursor:not-allowed; }
-    /* Smooth container to minimize layout shifts during preview mount */
     .preview-wrap { position: relative; width: 100%; height: 70vh; background: #f5f7fa; overflow: hidden; }
     .preview-iframe { width: 100%; height: 100%; border: 0; display:block; background:#fff; }
     .preview-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
@@ -20,7 +19,7 @@
 <body class="bg-gray-50 min-h-screen">
   <script>
     const API_BASE = "https://script.google.com/macros/s/AKfycbwYlNhtkr-O-IJ_lzgJqSLIp3g68-_1D0GQ201L-x-zxXM0J8OccwFqYyW19LL2iq8k/exec"; // GANTI: URL /exec dari deployment Apps Script
-    const API_VERSION = "v2025-09-07-r8";
+    const API_VERSION = "v2025-09-07-r10";
     const withNoCache = (url) => url + (url.includes("?") ? "&" : "?") + "_=" + encodeURIComponent(API_VERSION + "-" + Date.now());
 
     function fileToBase64(file){
@@ -278,18 +277,45 @@
             <div id="noDataMessage" class="text-center text-gray-500 py-6 hidden">Tidak ada data</div>
           </div>
 
-          <!-- Detail Modal -->
+          <!-- Detail + Update -->
           <dialog id="detailDialog" class="rounded-lg p-0 w-full max-w-4xl">
             <form method="dialog" class="p-5 space-y-3">
               <h3 class="text-xl font-semibold">Detail Pengajuan</h3>
               <div id="detailBody" class="text-sm text-gray-800 space-y-2"></div>
+
+              <div id="inUpdSection" class="mt-6 border-t pt-4">
+                <h4 class="text-base font-semibold mb-2">Ubah Status</h4>
+                <input id="inUpdTicket" type="hidden"/>
+                <div class="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-sm text-gray-600 mb-1">Status Baru</label>
+                    <select id="inUpdStatus" class="w-full px-3 py-2 border rounded-lg">
+                      <option value="diterima">Diterima</option>
+                      <option value="diproses">Sedang Diproses</option>
+                      <option value="selesai">Selesai</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm text-gray-600 mb-1">Dokumen Tambahan (URL publik, opsional)</label>
+                    <input id="inUpdDocUrl" class="w-full px-3 py-2 border rounded-lg" placeholder="https://..."/>
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <label class="block text-sm text-gray-600 mb-1">Catatan *</label>
+                  <textarea id="inUpdNote" rows="3" class="w-full px-3 py-2 border rounded-lg" required></textarea>
+                </div>
+                <div class="flex justify-end gap-2 mt-3">
+                  <button id="inUpdSubmit" type="button" class="btn px-4 py-2 rounded bg-blue-600 text-white">Simpan Perubahan</button>
+                </div>
+              </div>
+
               <menu class="flex gap-2 justify-end mt-3">
                 <button id="detailClose" type="button" class="px-4 py-2 rounded bg-blue-600 text-white">Tutup</button>
               </menu>
             </form>
           </dialog>
 
-          <!-- Preview Modal (no-flicker) -->
+          <!-- Preview Modal -->
           <dialog id="previewDialog" class="rounded-lg p-0 w-full max-w-5xl">
             <form method="dialog" class="p-0">
               <div class="flex items-center justify-between px-4 py-3 border-b">
@@ -306,31 +332,8 @@
                       <span>Menyiapkan pratinjau...</span>
                     </div>
                   </div>
-                  <!-- iframe akan dimount di sini -->
                 </div>
               </div>
-            </form>
-          </dialog>
-
-          <!-- Update Modal -->
-          <dialog id="updateDialog" class="rounded-lg p-0 w-full max-w-md">
-            <form method="dialog" class="p-4 space-y-3">
-              <h3 class="text-lg font-semibold">Update Status</h3>
-              <input id="updTicket" type="hidden"/>
-              <label class="block text-sm">Status Baru</label>
-              <select id="updStatus" class="w-full px-3 py-2 border rounded-lg">
-                <option value="diterima">Diterima</option>
-                <option value="diproses">Sedang Diproses</option>
-                <option value="selesai">Selesai</option>
-              </select>
-              <label class="block text-sm mt-2">Catatan *</label>
-              <textarea id="updNote" rows="3" class="w-full px-3 py-2 border rounded-lg" required></textarea>
-              <label class="block text-sm mt-2">Dokumen Tambahan (URL publik, opsional)</label>
-              <input id="updDocUrl" class="w-full px-3 py-2 border rounded-lg"/>
-              <menu class="flex gap-2 justify-end mt-3">
-                <button id="updCancel" type="button" class="px-4 py-2 rounded bg-gray-200">Batal</button>
-                <button id="updSubmit" class="btn px-4 py-2 rounded bg-blue-600 text-white">Update</button>
-              </menu>
             </form>
           </dialog>
         </div>
@@ -485,7 +488,7 @@
           <td class="px-3 py-2">
             <div class="flex gap-3">
               <button class="btn text-blue-600 text-xs underline" onclick="openDetail('${it.ticket}', event)">Detail</button>
-              <button class="btn text-indigo-600 text-xs underline" onclick="openUpdate('${it.ticket}','${it.status}')">Update</button>
+              <button class="btn text-indigo-600 text-xs underline" onclick="openDetail('${it.ticket}', event, {focusUpdate:true})">Update</button>
             </div>
           </td>
         </tr>`;
@@ -494,64 +497,109 @@
 
     const dlgDetail = document.getElementById("detailDialog");
     document.getElementById("detailClose").onclick = () => dlgDetail.close();
+    let CURRENT_DETAIL_TICKET = "";
 
-    async function openDetail(ticket, ev){
+    async function loadDetail(ticket){
+      const params = new URLSearchParams({ action:"admin_detail", token: ADMIN_TOKEN, ticket });
+      let data;
+      try {
+        const res = await fetch(withNoCache(API_BASE + "?" + params.toString()));
+        data = await res.json();
+      } catch(e){ toast("Gagal memuat detail.", false); return; }
+      if(data.error){ toast(data.error, false); return; }
+
+      const files = (data.files||[]).map(f=>{
+        const id = f.id || "";
+        const mime = (f.mime || "").toLowerCase();
+        const usePreview = !!id;
+        return `<li class="mb-1 flex items-center gap-2">
+          <a class="text-blue-700 underline" href="${f.viewUrl}" target="_blank" rel="noopener">${escapeHtml(f.name || f.id)}</a>
+          <span class="text-gray-400 text-xs">(${formatBytes(f.size)})</span>
+          ${usePreview?`<button type="button" class="btn text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300" onclick="previewFile('${id}','${mime}','${escapeHtml(f.name||"")}', event)">Preview</button>`:""}
+        </li>`;
+      }).join("") || "<li class='text-gray-500'>Tidak ada berkas</li>";
+
+      const historyHtml = (data.history||[]).map(h=>`<li class="mb-1"><span class="font-medium">${h.status}</span> — <span class="text-gray-600">${new Date(h.timestamp).toLocaleString("id-ID")}</span><div class="text-gray-700">${escapeHtml(h.note||"")}</div></li>`).join("") || "<li class='text-gray-500'>Belum ada riwayat</li>";
+
+      document.getElementById("detailBody").innerHTML = `
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <div><span class="text-gray-500">Tiket:</span> <span class="font-mono">${data.ticket}</span></div>
+            <div><span class="text-gray-500">Jenis:</span> ${data.type}</div>
+            <div><span class="text-gray-500">Status:</span> <span id="detailStatusTxt">${data.status}</span></div>
+            <div><span class="text-gray-500">Tanggal:</span> ${new Date(data.timestamp).toLocaleString("id-ID")}</div>
+          </div>
+          <div>
+            <div><span class="text-gray-500">Nama:</span> ${escapeHtml(data.nama||"")}</div>
+            <div><span class="text-gray-500">Email:</span> ${escapeHtml(data.email||"")}</div>
+            <div><span class="text-gray-500">Telepon:</span> ${escapeHtml(data.telepon||"")}</div>
+            ${data.instansi?`<div><span class="text-gray-500">Instansi:</span> ${escapeHtml(data.instansi)}</div>`:""}
+          </div>
+        </div>
+        ${data.kategori?`<div class="mt-2"><span class="text-gray-500">Kategori:</span> ${escapeHtml(data.kategori)}</div>`:""}
+        ${data.judul?`<div class="mt-2"><span class="text-gray-500">Judul:</span> ${escapeHtml(data.judul)}</div>`:""}
+        <div class="mt-2">
+          <div class="text-gray-500">Detail:</div>
+          <pre class="bg-gray-50 border rounded p-2 whitespace-pre-wrap">${escapeHtml(data.detail||"")}</pre>
+        </div>
+        ${data.jenisData?`<div class="mt-2"><span class="text-gray-500">Jenis Data:</span> ${escapeHtml(data.jenisData)}</div>`:""}
+        ${data.tujuan?`<div class="mt-2"><span class="text-gray-500">Tujuan:</span> ${escapeHtml(data.tujuan)}</div>`:""}
+        ${data.suratUrl?`<div class="mt-2"><span class="text-gray-500">Surat Resmi:</span> <a class="text-blue-700 underline" href="${data.suratUrl}" target="_blank" rel="noopener">${data.suratUrl}</a></div>`:""}
+        <div class="mt-4">
+          <div class="font-semibold mb-1">Berkas Terunggah</div>
+          <ul class="list-disc pl-5">${files}</ul>
+          ${data.folderUrl?`<div class="mt-2"><a class="text-indigo-700 underline" target="_blank" rel="noopener" href="${data.folderUrl}">Buka Folder Tiket di Drive</a></div>`:""}
+        </div>
+        <div class="mt-4">
+          <div class="font-semibold mb-1">Riwayat Status</div>
+          <ul class="list-disc pl-5">${historyHtml}</ul>
+        </div>
+      `;
+
+      document.getElementById('inUpdTicket').value = data.ticket;
+      document.getElementById('inUpdStatus').value = data.status;
+      document.getElementById('inUpdDocUrl').value = '';
+      document.getElementById('inUpdNote').value = '';
+    }
+
+    async function openDetail(ticket, ev, opts){
       const btn = ev?.currentTarget;
-      await withBusy(btn, "Membuka...", async ()=>{
+      await withBusy(btn || {disabled:false, innerHTML:''}, "Membuka...", async ()=>{
         document.getElementById("detailBody").innerHTML = '<div class="text-gray-600 text-sm">'+spinner+' Memuat detail...</div>';
-        dlgDetail.showModal();
-        const params = new URLSearchParams({ action:"admin_detail", token: ADMIN_TOKEN, ticket });
+        if (!dlgDetail.open) dlgDetail.showModal();
+        CURRENT_DETAIL_TICKET = ticket;
+        await loadDetail(ticket);
+        const submitBtn = document.getElementById('inUpdSubmit');
+        if (!submitBtn.dataset.bound) {
+          submitBtn.addEventListener('click', inlineUpdate);
+          submitBtn.dataset.bound = '1';
+        }
+        if (opts && opts.focusUpdate) {
+          document.getElementById('inUpdSection').scrollIntoView({behavior:'smooth'});
+          document.getElementById('inUpdNote').focus();
+        }
+      });
+    }
+
+    async function inlineUpdate(ev){
+      ev && ev.preventDefault && ev.preventDefault();
+      const btn = ev?.currentTarget;
+      await withBusy(btn, 'Menyimpan...', async ()=>{
+        const payload = {
+          action: 'admin_update',
+          token: ADMIN_TOKEN,
+          ticket: document.getElementById('inUpdTicket').value,
+          newStatus: document.getElementById('inUpdStatus').value,
+          note: document.getElementById('inUpdNote').value.trim(),
+          docUrl: document.getElementById('inUpdDocUrl').value.trim(),
+        };
         let data;
-        try {
-          const res = await fetch(withNoCache(API_BASE + "?" + params.toString()));
-          data = await res.json();
-        } catch(e){ toast("Gagal memuat detail.", false); return; }
-        if(data.error){ toast(data.error, false); return; }
-        const files = (data.files||[]).map(f=>{
-          const id = f.id || "";
-          const mime = (f.mime || "").toLowerCase();
-          const usePreview = !!id;
-          return `<li class="mb-1 flex items-center gap-2">
-            <a class="text-blue-700 underline" href="${f.viewUrl}" target="_blank" rel="noopener">${escapeHtml(f.name || f.id)}</a>
-            <span class="text-gray-400 text-xs">(${formatBytes(f.size)})</span>
-            ${usePreview?`<button class="btn text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300" type="button" onclick="previewFile('${id}','${mime}','${escapeHtml(f.name||"")}', event)">Preview</button>`:""}
-          </li>`;
-        }).join("") || "<li class='text-gray-500'>Tidak ada berkas</li>";
-        const historyHtml = (data.history||[]).map(h=>`<li class="mb-1"><span class="font-medium">${h.status}</span> — <span class="text-gray-600">${new Date(h.timestamp).toLocaleString("id-ID")}</span><div class="text-gray-700">${escapeHtml(h.note||"")}</div></li>`).join("") || "<li class='text-gray-500'>Belum ada riwayat</li>";
-        document.getElementById("detailBody").innerHTML = `
-          <div class="grid md:grid-cols-2 gap-4">
-            <div>
-              <div><span class="text-gray-500">Tiket:</span> <span class="font-mono">${data.ticket}</span></div>
-              <div><span class="text-gray-500">Jenis:</span> ${data.type}</div>
-              <div><span class="text-gray-500">Status:</span> ${data.status}</div>
-              <div><span class="text-gray-500">Tanggal:</span> ${new Date(data.timestamp).toLocaleString("id-ID")}</div>
-            </div>
-            <div>
-              <div><span class="text-gray-500">Nama:</span> ${escapeHtml(data.nama||"")}</div>
-              <div><span class="text-gray-500">Email:</span> ${escapeHtml(data.email||"")}</div>
-              <div><span class="text-gray-500">Telepon:</span> ${escapeHtml(data.telepon||"")}</div>
-              ${data.instansi?`<div><span class="text-gray-500">Instansi:</span> ${escapeHtml(data.instansi)}</div>`:""}
-            </div>
-          </div>
-          ${data.kategori?`<div class="mt-2"><span class="text-gray-500">Kategori:</span> ${escapeHtml(data.kategori)}</div>`:""}
-          ${data.judul?`<div class="mt-2"><span class="text-gray-500">Judul:</span> ${escapeHtml(data.judul)}</div>`:""}
-          <div class="mt-2">
-            <div class="text-gray-500">Detail:</div>
-            <pre class="bg-gray-50 border rounded p-2 whitespace-pre-wrap">${escapeHtml(data.detail||"")}</pre>
-          </div>
-          ${data.jenisData?`<div class="mt-2"><span class="text-gray-500">Jenis Data:</span> ${escapeHtml(data.jenisData)}</div>`:""}
-          ${data.tujuan?`<div class="mt-2"><span class="text-gray-500">Tujuan:</span> ${escapeHtml(data.tujuan)}</div>`:""}
-          ${data.suratUrl?`<div class="mt-2"><span class="text-gray-500">Surat Resmi:</span> <a class="text-blue-700 underline" href="${data.suratUrl}" target="_blank" rel="noopener">${data.suratUrl}</a></div>`:""}
-          <div class="mt-4">
-            <div class="font-semibold mb-1">Berkas Terunggah</div>
-            <ul class="list-disc pl-5">${files}</ul>
-            ${data.folderUrl?`<div class="mt-2"><a class="text-indigo-700 underline" target="_blank" rel="noopener" href="${data.folderUrl}">Buka Folder Tiket di Drive</a></div>`:""}
-          </div>
-          <div class="mt-4">
-            <div class="font-semibold mb-1">Riwayat Status</div>
-            <ul class="list-disc pl-5">${historyHtml}</ul>
-          </div>
-        `;
+        try { data = await postJSONNoPreflight(payload); }
+        catch(e1){ toast('Gagal membaca respons server.', false); return; }
+        if (data.error){ toast(data.error || 'Gagal update.', false); return; }
+        await loadAdmin();
+        if (CURRENT_DETAIL_TICKET){ await loadDetail(CURRENT_DETAIL_TICKET); }
+        toast('Status diperbarui & email terkirim.', true);
       });
     }
 
@@ -559,23 +607,17 @@
     document.getElementById("pvClose").onclick = (e)=>{ e.preventDefault(); e.stopPropagation(); dlgPreview.close(); };
     dlgPreview.addEventListener("cancel", (e)=>{ e.preventDefault(); dlgPreview.close(); });
 
-    function stext(t){ return String(t||"").replace(/[<>]/g,""); }
-
-    // FIX FLICKER: mount iframe exactly once; never remove/replace onload
     window.previewFile = (id, mime, name, ev) => {
       if (ev) { try { ev.preventDefault(); ev.stopPropagation(); } catch(_){} }
       const wrap = document.querySelector("#pvBody .preview-wrap");
       const overlay = wrap.querySelector(".preview-overlay");
       const oldIframe = wrap.querySelector("iframe.preview-iframe");
 
-      // Bersihkan hanya iframe lama (tanpa mengganti wrap)
       if (oldIframe) oldIframe.remove();
 
-      // Set judul & tampilkan dialog lebih dulu (tanpa memodifikasi isi wrap)
       document.getElementById("pvTitle").textContent = String(name || "Preview").replace(/[<>]/g,"");
       dlgPreview.showModal();
 
-      // Buat iframe sekali, mount, lalu biarkan — tidak ada innerHTML reset di onload
       const iframe = document.createElement("iframe");
       iframe.className = "preview-iframe";
       iframe.src = "https://drive.google.com/file/d/" + encodeURIComponent(id) + "/preview";
@@ -584,16 +626,12 @@
       iframe.setAttribute("referrerpolicy", "no-referrer");
       iframe.loading = "eager";
 
-      iframe.addEventListener("load", () => {
-        // Sembunyikan overlay saja; jangan menyentuh/mengganti DOM iframe
-        overlay.style.display = "none";
-      }, { once: true });
-
+      iframe.addEventListener("load", () => { overlay.style.display = "none"; }, { once: true });
       iframe.addEventListener("error", () => {
         overlay.innerHTML = '<div class="p-4 text-sm text-red-700 bg-white/90 rounded shadow">Pratinjau gagal dimuat. <a class="underline text-blue-700" target="_blank" rel="noopener" href="https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view">Buka di tab baru</a></div>';
       }, { once: true });
 
-      overlay.style.display = "flex"; // tampilkan loader saat mulai
+      overlay.style.display = "flex";
       wrap.appendChild(iframe);
     };
 
@@ -604,31 +642,6 @@
       return n.toFixed(1)+" "+u[i];
     }
     function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-    const dlg = document.getElementById("updateDialog");
-    document.getElementById("updCancel").onclick = ()=> dlg.close();
-    document.getElementById("updSubmit").onclick = async (e)=>{
-      e.preventDefault();
-      const btn = e.currentTarget;
-      await withBusy(btn, "Menyimpan...", async ()=>{
-        const payload = { action: "admin_update", token: ADMIN_TOKEN, ticket: document.getElementById("updTicket").value, newStatus: document.getElementById("updStatus").value, note: document.getElementById("updNote").value.trim(), docUrl: document.getElementById("updDocUrl").value.trim() };
-        let data;
-        try {
-          data = await postJSONNoPreflight(payload);
-        } catch(e1) { toast("Gagal membaca respons server.", false); return; }
-        if(data.error) { toast(data.error || "Gagal update.", false); return; }
-        dlg.close(); loadAdmin();
-        toast("Status diperbarui & email terkirim.", true);
-      });
-    };
-
-    window.openUpdate = (ticket, status)=>{
-      document.getElementById("updTicket").value = ticket;
-      document.getElementById("updStatus").value = status;
-      document.getElementById("updNote").value = "";
-      document.getElementById("updDocUrl").value = "";
-      dlg.showModal();
-    };
   </script>
 </body>
 </html>

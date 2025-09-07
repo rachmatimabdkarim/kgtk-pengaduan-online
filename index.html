@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Layanan Informasi & Pengaduan — KGTK Maluku Utara (r12-full)</title>
+  <title>Layanan Informasi & Pengaduan — KGTK Maluku Utara (r13)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
@@ -20,10 +20,9 @@
   <script>
     // GANTI dengan URL Web App (akhiran /exec)
     const API_BASE = "https://script.google.com/macros/s/AKfycbwYlNhtkr-O-IJ_lzgJqSLIp3g68-_1D0GQ201L-x-zxXM0J8OccwFqYyW19LL2iq8k/exec";
-    const API_VERSION = "v2025-09-07-r12-full";
+    const API_VERSION = "v2025-09-07-r13";
     const withNoCache = (url) => url + (url.includes("?") ? "&" : "?") + "_=" + encodeURIComponent(API_VERSION + "-" + Date.now());
 
-    // ===== Helpers umum =====
     function fileToBase64(file){
       return new Promise((resolve, reject)=>{
         const fr = new FileReader();
@@ -208,12 +207,21 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Kategori (khusus keluhan)</label>
               <select id="kategoriKeluhan" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
                 <option value="">Pilih Kategori</option>
-                <option value="sertifikasi">Sertifikasi Guru</option>
-                <option value="tunjangan">Tunjangan Profesi</option>
-                <option value="mutasi">Mutasi/Perpindahan</option>
-                <option value="promosi">Promosi Jabatan</option>
-                <option value="administrasi">Administrasi Kepegawaian</option>
-                <option value="lainnya">Lainnya</option>
+                <option>Pelatihan Pembelajaran Mendalam</option>
+                <option>Pelatihan Koding & Kecerdasan Artifisial</option>
+                <option>Pelatihan BCKS</option>
+                <option>Pelatihan Numerasi</option>
+                <option>Pelatihan Literasi</option>
+                <option>Pelatihan Bahasa Inggris</option>
+                <option>Pelatihan Bimbingan Konseling</option>
+                <option>Pelatihan Pendidikan Khusus</option>
+                <option>Pelatihan Berjenjang PAUD</option>
+                <option>Pelatihan Profesi Guru</option>
+                <option>Pengelolaan Kinerja</option>
+                <option>Uji Kompetensi</option>
+                <option>Peningkatan Kualifikasi</option>
+                <option>KICAU</option>
+                <option>Lainnya</option>
               </select>
             </div>
           </div>
@@ -275,7 +283,7 @@
         </div>
       </div>
 
-      <!-- Admin -->
+      <!-- Admin (detail + inline update + preview) -->
       <div id="adminContent" class="p-6 hidden">
         <div id="adminLogin" class="max-w-sm mx-auto">
           <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login Admin</h2>
@@ -367,7 +375,7 @@
             </form>
           </dialog>
 
-          <!-- Preview Modal (terpisah agar menutupnya tidak menutup detail) -->
+          <!-- Preview Modal -->
           <dialog id="previewDialog" class="rounded-lg p-0 w-full max-w-5xl">
             <form method="dialog" class="p-0">
               <div class="flex items-center justify-between px-4 py-3 border-b">
@@ -400,7 +408,7 @@
   </footer>
 
   <script>
-    // ====== Tab Nav ======
+    // Tabs
     const tabs = {
       layanan: { tab: document.getElementById("layananTab"), content: document.getElementById("layananContent") },
       status: { tab: document.getElementById("statusTab"), content: document.getElementById("statusContent") },
@@ -419,7 +427,7 @@
     document.getElementById("trackBtn").onclick = () => switchTab("status");
     document.getElementById("adminBtn").onclick = () => { document.getElementById("adminTab").classList.remove("hidden"); switchTab("admin"); };
 
-    // ====== Ping ======
+    // Ping
     document.getElementById("pingBtn").addEventListener("click", async (ev)=>{
       const btn = ev.currentTarget;
       await withBusy(btn, "Menghubungkan...", async ()=>{
@@ -433,7 +441,7 @@
       });
     });
 
-    // ====== Dynamic sections berdasarkan tipe ======
+    // Dynamic sections
     const tipeEl = document.getElementById("tipeLaporan");
     const secKeluhan = document.getElementById("secKeluhan");
     const secPermintaan = document.getElementById("secPermintaan");
@@ -449,8 +457,6 @@
       const isKeluhan = (tipe === "Keluhan & Kendala");
       secPermintaan.classList.toggle("hidden", !isPermintaan);
       secKeluhan.classList.toggle("hidden", !isKeluhan);
-
-      // required dinamis
       [instansiEl, jenisDataEl, tujuanEl, suratUrlEl].forEach(el => { if(!el) return; el.required = isPermintaan; });
       if (kategoriKeluhanEl) kategoriKeluhanEl.required = isKeluhan;
     }
@@ -459,7 +465,6 @@
 
     function val(id){ return document.getElementById(id)?.value?.trim() || ""; }
 
-    // Meta agar backend lama tetap kompatibel
     function buildDetailWithMeta(baseDetail){
       const meta = [
         ["Kab/Kota", val("kabkota")],
@@ -469,12 +474,11 @@
       ].map(([k,v]) => `[Meta] ${k}: ${v}`).join("\n");
       return meta + "\n\n" + baseDetail;
     }
-
     function deriveType(){
       return (val("tipeLaporan") === "Permintaan") ? "permintaan" : "pengaduan";
     }
 
-    // ====== Submit Layanan ======
+    // Submit
     document.getElementById("layananForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       const btn = e.submitter;
@@ -483,7 +487,6 @@
         const tipe = val("tipeLaporan");
         const isPermintaan = (tipe === "Permintaan");
         const isKeluhan = (tipe === "Keluhan & Kendala");
-
         const basePayload = {
           action: "submit",
           type: deriveType(),
@@ -494,17 +497,13 @@
           detail: buildDetailWithMeta(val("detail")),
           filesB64
         };
-
-        if (isKeluhan) {
-          basePayload.kategori = val("kategoriKeluhan");
-        }
+        if (isKeluhan) basePayload.kategori = val("kategoriKeluhan");
         if (isPermintaan) {
           basePayload.instansi = val("instansi");
           basePayload.jenisData = val("jenisData");
           basePayload.tujuan = val("tujuan");
           basePayload.suratUrl = val("suratUrl");
         }
-
         let data;
         try { data = await postJSONNoPreflight(basePayload); }
         catch(err){ toast("Gagal mengirim ke server.", false); return; }
@@ -516,7 +515,7 @@
       });
     });
 
-    // ====== Cek Status ======
+    // Cek Status
     document.getElementById("cekStatusBtn").onclick = async (ev)=>{
       const btn = ev.currentTarget;
       await withBusy(btn, "Mencari...", async ()=>{
@@ -534,7 +533,7 @@
       });
     };
 
-    // ====== Admin Auth + List ======
+    // Admin
     let ADMIN_TOKEN = "";
     document.getElementById("loginForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
@@ -600,7 +599,7 @@
       }).join("");
     }
 
-    // ====== Detail & Inline Update ======
+    // Detail & Inline Update
     const dlgDetail = document.getElementById("detailDialog");
     document.getElementById("detailClose").onclick = () => dlgDetail.close();
     let CURRENT_DETAIL_TICKET = "";
@@ -672,8 +671,9 @@
       const btn = ev?.currentTarget;
       await withBusy(btn || {disabled:false, innerHTML:''}, "Membuka...", async ()=>{
         document.getElementById("detailBody").innerHTML = '<div class="text-gray-600 text-sm">'+spinner+' Memuat detail...</div>';
+        const dlgDetail = document.getElementById("detailDialog");
         if (!dlgDetail.open) dlgDetail.showModal();
-        CURRENT_DETAIL_TICKET = ticket;
+        window.CURRENT_DETAIL_TICKET = ticket;
         await loadDetail(ticket);
         const submitBtn = document.getElementById('inUpdSubmit');
         if (!submitBtn.dataset.bound) {
@@ -700,12 +700,12 @@
         catch(e1){ toast('Gagal membaca respons server.', false); return; }
         if (data.error){ toast(data.error || 'Gagal update.', false); return; }
         await loadAdmin();
-        if (CURRENT_DETAIL_TICKET){ await loadDetail(CURRENT_DETAIL_TICKET); }
+        if (window.CURRENT_DETAIL_TICKET){ await loadDetail(window.CURRENT_DETAIL_TICKET); }
         toast('Status diperbarui & email terkirim.', true);
       });
     }
 
-    // ====== Preview Modal ======
+    // Preview
     const dlgPreview = document.getElementById("previewDialog");
     document.getElementById("pvClose").onclick = (e)=>{ e.preventDefault(); e.stopPropagation(); dlgPreview.close(); };
     dlgPreview.addEventListener("cancel", (e)=>{ e.preventDefault(); dlgPreview.close(); });

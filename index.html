@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Layanan Pengaduan & Permintaan Data — KGTK Maluku Utara (UPLOADS r11)</title>
+  <title>Layanan Informasi & Pengaduan — KGTK Maluku Utara (r12-full)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
@@ -20,7 +20,7 @@
   <script>
     // GANTI dengan URL Web App (akhiran /exec)
     const API_BASE = "https://script.google.com/macros/s/AKfycbwYlNhtkr-O-IJ_lzgJqSLIp3g68-_1D0GQ201L-x-zxXM0J8OccwFqYyW19LL2iq8k/exec";
-    const API_VERSION = "v2025-09-07-r11";
+    const API_VERSION = "v2025-09-07-r12-full";
     const withNoCache = (url) => url + (url.includes("?") ? "&" : "?") + "_=" + encodeURIComponent(API_VERSION + "-" + Date.now());
 
     // ===== Helpers umum =====
@@ -101,34 +101,112 @@
   <main class="container mx-auto px-4 py-8">
     <div class="bg-white rounded-lg card-shadow mb-8">
       <div class="flex border-b">
-        <button id="pengaduanTab" class="flex-1 py-4 px-6 text-center font-medium border-b-2 border-blue-600 text-blue-700 bg-blue-50">Pengaduan</button>
-        <button id="permintaanTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50">Permintaan Data</button>
+        <button id="layananTab" class="flex-1 py-4 px-6 text-center font-medium border-b-2 border-blue-600 text-blue-700 bg-blue-50">Form Layanan</button>
         <button id="statusTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50">Cek Status</button>
         <button id="adminTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50 hidden">Admin Panel</button>
       </div>
 
-      <!-- Pengaduan -->
-      <div id="pengaduanContent" class="p-6 animate-fade">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Pengaduan</h2>
-        <form id="pengaduanForm" class="space-y-6">
+      <!-- Form Layanan (gabungan) -->
+      <div id="layananContent" class="p-6 animate-fade">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Layanan</h2>
+        <form id="layananForm" class="space-y-6">
           <div class="grid md:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
-              <input id="namaPengadu" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+              <input id="nama" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-              <input id="emailPengadu" type="email" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+              <input id="email" type="email" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+              <p class="text-xs text-gray-500 mt-1">
+                Pastikan Anda mencantumkan alamat email pribadi yang aktif untuk menerima balasan kami.
+                Pastikan kembali alamat email aktif yang dicantumkan tidak ada kesalahan penulisan.
+              </p>
             </div>
           </div>
+
           <div class="grid md:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon *</label>
-              <input id="teleponPengadu" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+              <input id="telepon" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Kategori Pengaduan *</label>
-              <select id="kategoriPengaduan" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Kabupaten/Kota *</label>
+              <select id="kabkota" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">Pilih Kabupaten/Kota</option>
+                <option>Kabupaten Halmahera Barat</option>
+                <option>Kabupaten Halmahera Tengah</option>
+                <option>Kabupaten Halmahera Timur</option>
+                <option>Kabupaten Halmahera Selatan</option>
+                <option>Kabupaten Halmahera Utara</option>
+                <option>Kabupaten Kepulauan Sula</option>
+                <option>Kabupaten Pulau Morotai</option>
+                <option>Kabupaten Pulau Taliabu</option>
+                <option>Kota Ternate</option>
+                <option>Kota Tidore Kepulauan</option>
+                <option>Lainnya</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Peran *</label>
+              <select id="peran" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">Pilih Peran</option>
+                <option>Admin Sekolah</option>
+                <option>Dinas Pendidikan</option>
+                <option>Dosen</option>
+                <option>Guru</option>
+                <option>Kepala Sekolah</option>
+                <option>Plt. Kepala Sekolah</option>
+                <option>Lembaga Kursus dan Pelatihan</option>
+                <option>Mahasiswa</option>
+                <option>Operator Dapodik</option>
+                <option>Operator Dinas Lainnya</option>
+                <option>Operator Dinas Pendidikan</option>
+                <option>Operator Emis</option>
+                <option>Operator Sekolah / Yayasan</option>
+                <option>Orang Tua / Wali</option>
+                <option>Pengawas Sekolah</option>
+                <option>Perguruan Tinggi</option>
+                <option>Publik</option>
+                <option>Siswa</option>
+                <option>Staf Sekolah / Yayasan</option>
+                <option>Tenaga Pendidik Lainnya</option>
+                <option>Yayasan Pendidikan</option>
+                <option>Lainnya</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Laporan (Tipe) *</label>
+              <select id="tipeLaporan" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">Pilih Tipe</option>
+                <option>Pertanyaan & Informasi</option>
+                <option>Permintaan</option>
+                <option>Keluhan & Kendala</option>
+                <option>Aspirasi & Saran</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Layanan *</label>
+            <select id="layananJenis" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+              <option value="">Pilih Layanan</option>
+              <option>Peningkatan Kompetensi</option>
+              <option>Fasilitasi</option>
+              <option>Kemitraan</option>
+              <option>Administrasi</option>
+              <option>Lainnya</option>
+            </select>
+          </div>
+
+          <!-- Khusus Keluhan & Kendala -->
+          <div id="secKeluhan" class="hidden">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Kategori (khusus keluhan)</label>
+              <select id="kategoriKeluhan" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
                 <option value="">Pilih Kategori</option>
                 <option value="sertifikasi">Sertifikasi Guru</option>
                 <option value="tunjangan">Tunjangan Profesi</option>
@@ -139,84 +217,46 @@
               </select>
             </div>
           </div>
+
+          <!-- Khusus Permintaan -->
+          <div id="secPermintaan" class="hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Instansi/Organisasi *</label>
+                <input id="instansi" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Data *</label>
+                <input id="jenisData" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: Statistik Guru, Data Sekolah, ..."/>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Tujuan Penggunaan Data *</label>
+              <textarea id="tujuan" rows="3" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Surat Permohonan Resmi (URL publik) *</label>
+              <input id="suratUrl" type="url" class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
+            </div>
+          </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Judul Pengaduan *</label>
-            <input id="judulPengaduan" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Ringkasan singkat pengaduan Anda"/>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Judul *</label>
+            <input id="judul" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Ringkasan singkat topik Anda"/>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Detail Pengaduan *</label>
-            <textarea id="detailPengaduan" required rows="5" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Jelaskan detail pengaduan Anda..."></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Uraian/Detail *</label>
+            <textarea id="detail" required rows="5" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Jelaskan detail kebutuhan/keluhan/pertanyaan Anda..."></textarea>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (unggah, opsional)</label>
-            <input id="filesPengaduan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" 
+            <input id="filesLayanan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" 
                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip"/>
             <p class="text-xs text-gray-500 mt-1">Saran &lt; 10MB per file.</p>
           </div>
 
-          <button class="btn w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">Kirim Pengaduan</button>
-        </form>
-      </div>
-
-      <!-- Permintaan Data -->
-      <div id="permintaanContent" class="p-6 hidden">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Permintaan Data</h2>
-        <form id="permintaanForm" class="space-y-6">
-          <div class="grid md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
-              <input id="namaPemohon" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-              <input id="emailPemohon" type="email" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
-            </div>
-          </div>
-          <div class="grid md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon *</label>
-              <input id="teleponPemohon" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Instansi/Organisasi *</label>
-              <input id="instansiPemohon" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Data yang Diminta *</label>
-            <select id="jenisData" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
-              <option value="">Pilih Jenis Data</option>
-              <option value="statistik-guru">Statistik Guru</option>
-              <option value="data-sekolah">Data Sekolah</option>
-              <option value="sertifikasi">Data Sertifikasi</option>
-              <option value="tunjangan">Data Tunjangan</option>
-              <option value="mutasi">Data Mutasi</option>
-              <option value="lainnya">Lainnya</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Tujuan Penggunaan Data *</label>
-            <textarea id="tujuanData" required rows="3" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Detail Permintaan Data *</label>
-            <textarea id="detailPermintaan" required rows="4" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Surat Permohonan Resmi (URL publik) *</label>
-            <input id="suratUrl" type="url" required class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (unggah, opsional)</label>
-            <input id="filesPermintaan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" 
-                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip"/>
-            <p class="text-xs text-gray-500 mt-1">Saran &lt; 10MB per file.</p>
-          </div>
-
-          <button class="btn w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700">Kirim Permintaan Data</button>
+          <button class="btn w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">Kirim</button>
         </form>
       </div>
 
@@ -289,7 +329,7 @@
             <div id="noDataMessage" class="text-center text-gray-500 py-6 hidden">Tidak ada data</div>
           </div>
 
-          <!-- Detail + Update -->
+          <!-- Detail + Inline Update -->
           <dialog id="detailDialog" class="rounded-lg p-0 w-full max-w-4xl">
             <form method="dialog" class="p-5 space-y-3">
               <h3 class="text-xl font-semibold">Detail Pengajuan</h3>
@@ -327,7 +367,7 @@
             </form>
           </dialog>
 
-          <!-- Preview Modal -->
+          <!-- Preview Modal (terpisah agar menutupnya tidak menutup detail) -->
           <dialog id="previewDialog" class="rounded-lg p-0 w-full max-w-5xl">
             <form method="dialog" class="p-0">
               <div class="flex items-center justify-between px-4 py-3 border-b">
@@ -362,8 +402,7 @@
   <script>
     // ====== Tab Nav ======
     const tabs = {
-      pengaduan: { tab: document.getElementById("pengaduanTab"), content: document.getElementById("pengaduanContent") },
-      permintaan: { tab: document.getElementById("permintaanTab"), content: document.getElementById("permintaanContent") },
+      layanan: { tab: document.getElementById("layananTab"), content: document.getElementById("layananContent") },
       status: { tab: document.getElementById("statusTab"), content: document.getElementById("statusContent") },
       admin: { tab: document.getElementById("adminTab"), content: document.getElementById("adminContent") },
     };
@@ -374,8 +413,7 @@
         else{ tab.classList.remove("border-b-2","border-blue-600","text-blue-700","bg-blue-50"); content.classList.add("hidden"); }
       });
     }
-    tabs.pengaduan.tab.onclick = () => switchTab("pengaduan");
-    tabs.permintaan.tab.onclick = () => switchTab("permintaan");
+    tabs.layanan.tab.onclick = () => switchTab("layanan");
     tabs.status.tab.onclick = () => switchTab("status");
     tabs.admin.tab.onclick = () => switchTab("admin");
     document.getElementById("trackBtn").onclick = () => switchTab("status");
@@ -395,61 +433,85 @@
       });
     });
 
-    // ====== Helpers ======
-    function val(id){ return document.getElementById(id).value.trim(); }
+    // ====== Dynamic sections berdasarkan tipe ======
+    const tipeEl = document.getElementById("tipeLaporan");
+    const secKeluhan = document.getElementById("secKeluhan");
+    const secPermintaan = document.getElementById("secPermintaan");
+    const instansiEl = document.getElementById("instansi");
+    const jenisDataEl = document.getElementById("jenisData");
+    const tujuanEl = document.getElementById("tujuan");
+    const suratUrlEl = document.getElementById("suratUrl");
+    const kategoriKeluhanEl = document.getElementById("kategoriKeluhan");
 
-    // ====== Submit Pengaduan ======
-    document.getElementById("pengaduanForm").addEventListener("submit", async (e)=>{
+    function updateTipeUI(){
+      const tipe = tipeEl.value;
+      const isPermintaan = (tipe === "Permintaan");
+      const isKeluhan = (tipe === "Keluhan & Kendala");
+      secPermintaan.classList.toggle("hidden", !isPermintaan);
+      secKeluhan.classList.toggle("hidden", !isKeluhan);
+
+      // required dinamis
+      [instansiEl, jenisDataEl, tujuanEl, suratUrlEl].forEach(el => { if(!el) return; el.required = isPermintaan; });
+      if (kategoriKeluhanEl) kategoriKeluhanEl.required = isKeluhan;
+    }
+    tipeEl.addEventListener("change", updateTipeUI);
+    updateTipeUI();
+
+    function val(id){ return document.getElementById(id)?.value?.trim() || ""; }
+
+    // Meta agar backend lama tetap kompatibel
+    function buildDetailWithMeta(baseDetail){
+      const meta = [
+        ["Kab/Kota", val("kabkota")],
+        ["Peran", val("peran")],
+        ["Tipe Laporan", val("tipeLaporan")],
+        ["Layanan", val("layananJenis")]
+      ].map(([k,v]) => `[Meta] ${k}: ${v}`).join("\n");
+      return meta + "\n\n" + baseDetail;
+    }
+
+    function deriveType(){
+      return (val("tipeLaporan") === "Permintaan") ? "permintaan" : "pengaduan";
+    }
+
+    // ====== Submit Layanan ======
+    document.getElementById("layananForm").addEventListener("submit", async (e)=>{
       e.preventDefault();
       const btn = e.submitter;
       await withBusy(btn, "Mengirim...", async ()=>{
-        const filesB64 = await collectFilesB64(document.getElementById("filesPengaduan"));
-        const payload = {
+        const filesB64 = await collectFilesB64(document.getElementById("filesLayanan"));
+        const tipe = val("tipeLaporan");
+        const isPermintaan = (tipe === "Permintaan");
+        const isKeluhan = (tipe === "Keluhan & Kendala");
+
+        const basePayload = {
           action: "submit",
-          type: "pengaduan",
-          nama: val("namaPengadu"),
-          email: val("emailPengadu"),
-          telepon: val("teleponPengadu"),
-          kategori: val("kategoriPengaduan"),
-          judul: val("judulPengaduan"),
-          detail: val("detailPengaduan"),
+          type: deriveType(),
+          nama: val("nama"),
+          email: val("email"),
+          telepon: val("telepon"),
+          judul: val("judul"),
+          detail: buildDetailWithMeta(val("detail")),
           filesB64
         };
+
+        if (isKeluhan) {
+          basePayload.kategori = val("kategoriKeluhan");
+        }
+        if (isPermintaan) {
+          basePayload.instansi = val("instansi");
+          basePayload.jenisData = val("jenisData");
+          basePayload.tujuan = val("tujuan");
+          basePayload.suratUrl = val("suratUrl");
+        }
+
         let data;
-        try { data = await postJSONNoPreflight(payload); }
+        try { data = await postJSONNoPreflight(basePayload); }
         catch(err){ toast("Gagal mengirim ke server.", false); return; }
         if (data.error) { toast(data.error, false); return; }
         toast("Berhasil dikirim. Nomor tiket: " + data.ticket, true);
-        document.getElementById("pengaduanForm").reset();
-        switchTab("status"); document.getElementById("nomorTiket").value = data.ticket;
-      });
-    });
-
-    // ====== Submit Permintaan Data ======
-    document.getElementById("permintaanForm").addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const btn = e.submitter;
-      await withBusy(btn, "Mengirim...", async ()=>{
-        const filesB64 = await collectFilesB64(document.getElementById("filesPermintaan"));
-        const payload = {
-          action: "submit",
-          type: "permintaan",
-          nama: val("namaPemohon"),
-          email: val("emailPemohon"),
-          telepon: val("teleponPemohon"),
-          instansi: val("instansiPemohon"),
-          jenisData: val("jenisData"),
-          tujuan: val("tujuanData"),
-          detail: val("detailPermintaan"),
-          suratUrl: val("suratUrl"),
-          filesB64
-        };
-        let data;
-        try { data = await postJSONNoPreflight(payload); }
-        catch(e1){ toast("Gagal mengirim ke server.", false); return; }
-        if (data.error) { toast(data.error, false); return; }
-        toast("Berhasil dikirim. Nomor tiket: " + data.ticket, true);
-        document.getElementById("permintaanForm").reset();
+        document.getElementById("layananForm").reset();
+        updateTipeUI();
         switchTab("status"); document.getElementById("nomorTiket").value = data.ticket;
       });
     });
@@ -533,12 +595,7 @@
           <td class="px-3 py-2">${it.email}</td>
           <td class="px-3 py-2">${it.date}</td>
           <td class="px-3 py-2"><span class="px-2 py-1 rounded ${badge} text-xs">${it.status}</span></td>
-          <td class="px-3 py-2">
-            <div class="flex gap-3">
-              <button class="btn text-blue-600 text-xs underline" onclick="openDetail('${it.ticket}', event)">Detail</button>
-              <button class="btn text-indigo-600 text-xs underline" onclick="openDetail('${it.ticket}', event, {focusUpdate:true})">Update</button>
-            </div>
-          </td>
+          <td class="px-3 py-2"><button class="btn text-blue-600 text-xs underline" onclick="openDetail('${it.ticket}', event)">Detail</button></td>
         </tr>`;
       }).join("");
     }
@@ -611,11 +668,10 @@
       document.getElementById('inUpdNote').value = '';
     }
 
-    async function openDetail(ticket, ev, opts){
+    async function openDetail(ticket, ev){
       const btn = ev?.currentTarget;
       await withBusy(btn || {disabled:false, innerHTML:''}, "Membuka...", async ()=>{
         document.getElementById("detailBody").innerHTML = '<div class="text-gray-600 text-sm">'+spinner+' Memuat detail...</div>';
-        const dlgDetail = document.getElementById("detailDialog");
         if (!dlgDetail.open) dlgDetail.showModal();
         CURRENT_DETAIL_TICKET = ticket;
         await loadDetail(ticket);
@@ -623,10 +679,6 @@
         if (!submitBtn.dataset.bound) {
           submitBtn.addEventListener('click', inlineUpdate);
           submitBtn.dataset.bound = '1';
-        }
-        if (opts && opts.focusUpdate) {
-          document.getElementById('inUpdSection').scrollIntoView({behavior:'smooth'});
-          document.getElementById('inUpdNote').focus();
         }
       });
     }
@@ -657,7 +709,6 @@
     const dlgPreview = document.getElementById("previewDialog");
     document.getElementById("pvClose").onclick = (e)=>{ e.preventDefault(); e.stopPropagation(); dlgPreview.close(); };
     dlgPreview.addEventListener("cancel", (e)=>{ e.preventDefault(); dlgPreview.close(); });
-
     window.previewFile = (id, mime, name, ev) => {
       if (ev) { try { ev.preventDefault(); ev.stopPropagation(); } catch(_){} }
       const wrap = document.querySelector("#pvBody .preview-wrap");

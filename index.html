@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Layanan Pengaduan & Permintaan Data — KGTK Maluku Utara (UPLOADS r7)</title>
+  <title>Layanan Pengaduan & Permintaan Data — KGTK Maluku Utara (UPLOADS r8)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
@@ -11,12 +11,16 @@
     .animate-fade { animation: fadeIn .25s ease-in; }
     @keyframes fadeIn { from {opacity:0} to {opacity:1} }
     .btn[disabled]{ opacity:.6; cursor:not-allowed; }
+    /* Smooth container to minimize layout shifts during preview mount */
+    .preview-wrap { position: relative; width: 100%; height: 70vh; background: #f5f7fa; overflow: hidden; }
+    .preview-iframe { width: 100%; height: 100%; border: 0; display:block; background:#fff; }
+    .preview-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <script>
     const API_BASE = "https://script.google.com/macros/s/AKfycbwYlNhtkr-O-IJ_lzgJqSLIp3g68-_1D0GQ201L-x-zxXM0J8OccwFqYyW19LL2iq8k/exec"; // GANTI: URL /exec dari deployment Apps Script
-    const API_VERSION = "v2025-09-07-r7";
+    const API_VERSION = "v2025-09-07-r8";
     const withNoCache = (url) => url + (url.includes("?") ? "&" : "?") + "_=" + encodeURIComponent(API_VERSION + "-" + Date.now());
 
     function fileToBase64(file){
@@ -91,6 +95,7 @@
         <button id="adminTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50 hidden">Admin Panel</button>
       </div>
 
+      <!-- Pengaduan -->
       <div id="pengaduanContent" class="p-6 animate-fade">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Pengaduan</h2>
         <form id="pengaduanForm" class="space-y-6">
@@ -130,15 +135,20 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Detail Pengaduan *</label>
             <textarea id="detailPengaduan" required rows="5" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Jelaskan detail pengaduan Anda..."></textarea>
           </div>
+
+          <!-- FILE UPLOAD -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (unggah, opsional)</label>
-            <input id="filesPengaduan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip"/>
+            <input id="filesPengaduan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" 
+                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip"/>
             <p class="text-xs text-gray-500 mt-1">Saran &lt; 10MB per file.</p>
           </div>
+
           <button class="btn w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">Kirim Pengaduan</button>
         </form>
       </div>
 
+      <!-- Permintaan Data -->
       <div id="permintaanContent" class="p-6 hidden">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Permintaan Data</h2>
         <form id="permintaanForm" class="space-y-6">
@@ -182,19 +192,24 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Detail Permintaan Data *</label>
             <textarea id="detailPermintaan" required rows="4" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
           </div>
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Surat Permohonan Resmi (URL publik) *</label>
             <input id="suratUrl" type="url" required class="w-full px-4 py-3 border rounded-lg" placeholder="https://drive.google.com/file/d/..."/>
           </div>
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (unggah, opsional)</label>
-            <input id="filesPermintaan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip"/>
+            <input id="filesPermintaan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" 
+                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip"/>
             <p class="text-xs text-gray-500 mt-1">Saran &lt; 10MB per file.</p>
           </div>
+
           <button class="btn w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700">Kirim Permintaan Data</button>
         </form>
       </div>
 
+      <!-- Cek Status -->
       <div id="statusContent" class="p-6 hidden">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Lacak Status Pengajuan</h2>
         <div class="max-w-md mx-auto">
@@ -209,6 +224,7 @@
         </div>
       </div>
 
+      <!-- Admin -->
       <div id="adminContent" class="p-6 hidden">
         <div id="adminLogin" class="max-w-sm mx-auto">
           <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login Admin</h2>
@@ -262,6 +278,7 @@
             <div id="noDataMessage" class="text-center text-gray-500 py-6 hidden">Tidak ada data</div>
           </div>
 
+          <!-- Detail Modal -->
           <dialog id="detailDialog" class="rounded-lg p-0 w-full max-w-4xl">
             <form method="dialog" class="p-5 space-y-3">
               <h3 class="text-xl font-semibold">Detail Pengajuan</h3>
@@ -272,18 +289,30 @@
             </form>
           </dialog>
 
+          <!-- Preview Modal (no-flicker) -->
           <dialog id="previewDialog" class="rounded-lg p-0 w-full max-w-5xl">
             <form method="dialog" class="p-0">
               <div class="flex items-center justify-between px-4 py-3 border-b">
                 <div class="font-semibold" id="pvTitle">Preview</div>
                 <button id="pvClose" type="button" class="px-3 py-1 rounded bg-gray-200">Tutup</button>
               </div>
-              <div id="pvBody" class="p-0 bg-black/5" style="height: 70vh; display:flex; align-items:center; justify-content:center;">
-                <div class="text-gray-600 text-sm px-4 py-2">Menyiapkan pratinjau...</div>
+              <div id="pvBody" class="p-0">
+                <div class="preview-wrap">
+                  <div class="preview-overlay text-gray-600 text-sm">
+                    <div class="flex items-center gap-2 bg-white/80 rounded px-3 py-2 shadow">
+                      <span class="inline-block" style="width:16px;height:16px;">
+                        <svg class="animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+                      </span>
+                      <span>Menyiapkan pratinjau...</span>
+                    </div>
+                  </div>
+                  <!-- iframe akan dimount di sini -->
+                </div>
               </div>
             </form>
           </dialog>
 
+          <!-- Update Modal -->
           <dialog id="updateDialog" class="rounded-lg p-0 w-full max-w-md">
             <form method="dialog" class="p-4 space-y-3">
               <h3 class="text-lg font-semibold">Update Status</h3>
@@ -532,24 +561,39 @@
 
     function stext(t){ return String(t||"").replace(/[<>]/g,""); }
 
+    // FIX FLICKER: mount iframe exactly once; never remove/replace onload
     window.previewFile = (id, mime, name) => {
-      const pvBody = document.getElementById("pvBody");
-      const pvTitle = document.getElementById("pvTitle");
-      pvBody.innerHTML = '<div class="text-gray-600 text-sm px-4 py-2">'+spinner+' Memuat pratinjau...</div>';
-      pvTitle.textContent = stext(name || "Preview");
+      const wrap = document.querySelector("#pvBody .preview-wrap");
+      const overlay = wrap.querySelector(".preview-overlay");
+      const oldIframe = wrap.querySelector("iframe.preview-iframe");
+
+      // Bersihkan hanya iframe lama (tanpa mengganti wrap)
+      if (oldIframe) oldIframe.remove();
+
+      // Set judul & tampilkan dialog lebih dulu (tanpa memodifikasi isi wrap)
+      document.getElementById("pvTitle").textContent = String(name || "Preview").replace(/[<>]/g,"");
+      dlgPreview.showModal();
+
+      // Buat iframe sekali, mount, lalu biarkan — tidak ada innerHTML reset di onload
       const iframe = document.createElement("iframe");
+      iframe.className = "preview-iframe";
       iframe.src = "https://drive.google.com/file/d/" + encodeURIComponent(id) + "/preview";
       iframe.title = name || "preview";
-      iframe.style.width = "100%";
-      iframe.style.height = "70vh";
-      iframe.setAttribute("allow", "autoplay");
+      iframe.setAttribute("allow", "autoplay; fullscreen");
       iframe.setAttribute("referrerpolicy", "no-referrer");
-      iframe.onload = ()=>{ pvBody.innerHTML=""; pvBody.appendChild(iframe); };
-      iframe.onerror = ()=>{
-        pvBody.innerHTML = '<div class="p-4 text-sm text-red-700">Pratinjau gagal dimuat. <a class="underline text-blue-700" target="_blank" rel="noopener" href="https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view">Buka di tab baru</a></div>';
-      };
-      dlgPreview.showModal();
-      setTimeout(()=>{ pvBody.innerHTML=""; pvBody.appendChild(iframe); }, 50);
+      iframe.loading = "eager";
+
+      iframe.addEventListener("load", () => {
+        // Sembunyikan overlay saja; jangan menyentuh/mengganti DOM iframe
+        overlay.style.display = "none";
+      }, { once: true });
+
+      iframe.addEventListener("error", () => {
+        overlay.innerHTML = '<div class="p-4 text-sm text-red-700 bg-white/90 rounded shadow">Pratinjau gagal dimuat. <a class="underline text-blue-700" target="_blank" rel="noopener" href="https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view">Buka di tab baru</a></div>';
+      }, { once: true });
+
+      overlay.style.display = "flex"; // tampilkan loader saat mulai
+      wrap.appendChild(iframe);
     };
 
     function formatBytes(b){

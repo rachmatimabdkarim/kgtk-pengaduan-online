@@ -1,747 +1,446 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Layanan Informasi & Pengaduan — KGTK Maluku Utara (r14)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>KGTK Maluku Utara — Layanan Informasi & Pengaduan (r15)</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    .card-shadow { box-shadow: 0 4px 6px rgba(0,0,0,0.06); }
-    .animate-fade { animation: fadeIn .25s ease-in; }
-    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
-    .btn[disabled]{ opacity:.6; cursor:not-allowed; }
-    .preview-wrap { position: relative; width: 100%; height: 70vh; background: #f5f7fa; overflow: hidden; }
-    .preview-iframe { width: 100%; height: 100%; border: 0; display:block; background:#fff; }
-    .preview-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 20px; }
+    h1 { margin-bottom: .2rem; }
+    .row { display: grid; grid-template-columns: 160px 1fr; gap: 8px 12px; align-items: center; margin: 6px 0; }
+    .row > label { font-size: 14px; color: #333; }
+    input[type=text], input[type=email], input[type=tel], textarea, select {
+      width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 8px;
+    }
+    textarea { min-height: 90px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin: 16px 0; }
+    .muted { color: #666; font-size: 13px; }
+    .actions button { padding: 8px 12px; border-radius: 10px; border: 1px solid #ccc; background: #f8f9fa; cursor: pointer; }
+    .actions button.primary { background: #2563eb; color: white; border-color: #2563eb; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .hidden { display: none !important; }
+    code.block { display: block; white-space: pre-wrap; background: #f6f8fa; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:12px; margin-right:6px; }
+    .sep { height:1px; background:#eee; margin:10px 0; }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-  <script>
-    // GANTI dengan URL Web App (akhiran /exec)
-    const API_BASE = "https://script.google.com/macros/s/AKfycbxdBlcGDtO6SgtVgVhork4M8po37U-cg5RqQ6Uz0MLfGVSbHf1zuLG6lvrlwNHO5ffU/exec";
-    const API_VERSION = "v2025-09-07-r14";
-    const withNoCache = (url) => url + (url.includes("?") ? "&" : "?") + "_=" + encodeURIComponent(API_VERSION + "-" + Date.now());
+<body>
+  <h1>Layanan Informasi & Pengaduan</h1>
+  <div class="muted">Kantor Guru dan Tenaga Kependidikan (KGTK) Provinsi Maluku Utara — r15</div>
 
-    function fileToBase64(file){
-      return new Promise((resolve, reject)=>{
+  <div class="card">
+    <div class="row">
+      <label for="api_base">API_BASE (URL Web App /exec)</label>
+      <input id="api_base" type="text" placeholder="https://script.google.com/macros/s/xxx/exec" />
+    </div>
+    <div class="actions">
+      <button id="btnPing">Tes Koneksi</button>
+      <span id="pingOut" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <label>Jenis</label>
+      <div>
+        <label><input type="radio" name="jenis" value="pengaduan" checked/> Pengaduan</label>
+        &nbsp; &nbsp;
+        <label><input type="radio" name="jenis" value="permintaan"/> Permintaan Data</label>
+      </div>
+    </div>
+
+    <div class="row"><label>Nama</label><input id="nama" type="text" /></div>
+    <div class="row"><label>Email</label><input id="email" type="email" /></div>
+    <div class="row"><label>Telepon</label><input id="telepon" type="tel" /></div>
+    <div class="row"><label>Judul</label><input id="judul" type="text" /></div>
+
+    <!-- Bidang meta umum -->
+    <div class="grid-2">
+      <div class="row"><label>Kab/Kota</label><input id="kabkota" type="text" placeholder="contoh: Kota Ternate"/></div>
+      <div class="row"><label>Peran</label><input id="peran" type="text" placeholder="contoh: Kepala Sekolah"/></div>
+      <div class="row"><label>Tipe Laporan</label><input id="tipeLaporan" type="text" placeholder="contoh: Layanan"/></div>
+      <div class="row"><label>Layanan</label><input id="layanan" type="text" placeholder="contoh: Pengaduan Aplikasi"/></div>
+    </div>
+
+    <!-- Khusus pengaduan -->
+    <div id="boxPengaduan">
+      <div class="row"><label>Kategori (Pengaduan)</label><input id="kategori" type="text" placeholder="contoh: Pelayanan"/></div>
+    </div>
+
+    <!-- Khusus permintaan data -->
+    <div id="boxPermintaan" class="hidden">
+      <div class="row"><label>Instansi</label><input id="instansi" type="text" placeholder="contoh: Dinas Pendidikan"/></div>
+      <div class="row"><label>Jenis Data</label><input id="jenisData" type="text" placeholder="contoh: Data GTK per kab/kota"/></div>
+      <div class="row"><label>Tujuan</label><input id="tujuan" type="text" placeholder="contoh: Penyusunan program"/></div>
+      <div class="row"><label>Surat Permohonan Resmi</label><input id="surat" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip"/></div>
+    </div>
+
+    <div class="row"><label>Detail</label><textarea id="detail" placeholder="Uraian utama…"></textarea></div>
+
+    <div class="row"><label>Lampiran (opsional)</label><input id="lampiran" type="file" multiple /></div>
+
+    <div class="actions">
+      <button id="btnSubmit" class="primary">Kirim</button>
+      <span id="submitOut" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <label>Nomor Tiket</label><input id="ticket" type="text" placeholder="GTK…" />
+    </div>
+    <div class="actions">
+      <button id="btnStatus">Cek Status</button>
+    </div>
+    <div id="statusOut"><code class="block"></code></div>
+  </div>
+
+  <div class="card">
+    <h3>Admin</h3>
+    <div class="grid-2">
+      <div>
+        <div class="row"><label>User</label><input id="admin_user" type="text"/></div>
+        <div class="row"><label>Pass</label><input id="admin_pass" type="text"/></div>
+        <div class="actions">
+          <button id="btnLogin">Login</button>
+          <button id="btnLogout">Logout</button>
+          <span id="loginOut" class="muted"></span>
+        </div>
+      </div>
+      <div>
+        <div class="row"><label>Token</label><input id="token" type="text" readonly/></div>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="grid-2">
+      <div>
+        <div class="row"><label>Filter Tipe</label>
+          <select id="fltType">
+            <option value="">(semua)</option>
+            <option value="pengaduan">pengaduan</option>
+            <option value="permintaan">permintaan</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="row"><label>Filter Status</label>
+          <select id="fltStatus">
+            <option value="">(semua)</option>
+            <option value="diterima">diterima</option>
+            <option value="diproses">diproses</option>
+            <option value="selesai">selesai</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="row"><label>Cari</label><input id="fltQ" type="text" placeholder="ticket/nama/email"/></div>
+    <div class="actions">
+      <button id="btnList">Tampilkan</button>
+      <button id="btnListReset">Reset</button>
+    </div>
+    <div id="listOut"></div>
+
+    <div class="sep"></div>
+
+    <div>
+      <div class="row"><label>Tiket Detail</label><input id="dt_ticket" type="text" placeholder="GTK…"/></div>
+      <div class="actions">
+        <button id="btnDetail">Ambil Detail</button>
+      </div>
+      <div id="detailOut"><code class="block"></code></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div>
+      <h4>Ubah Status</h4>
+      <div class="grid-2">
+        <div class="row"><label>Tiket</label><input id="up_ticket" type="text" placeholder="GTK…"/></div>
+        <div class="row"><label>Status Baru</label>
+          <select id="up_status">
+            <option value="diterima">diterima</option>
+            <option value="diproses">diproses</option>
+            <option value="selesai">selesai</option>
+          </select>
+        </div>
+      </div>
+      <div class="row"><label>Catatan</label><input id="up_note" type="text" placeholder="wajib diisi"/></div>
+      <div class="row"><label>Dokumen (URL opsional)</label><input id="up_doc" type="text" placeholder="https://…"/></div>
+      <div class="actions">
+        <button id="btnUpdate" class="primary">Simpan Perubahan</button>
+        <span id="updateOut" class="muted"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const qs = (s, el=document)=> el.querySelector(s);
+    const qsa = (s, el=document)=> [...el.querySelectorAll(s)];
+
+    const API_BASE_INPUT = qs('#api_base');
+    const PING_OUT = qs('#pingOut');
+    const SUBMIT_OUT = qs('#submitOut');
+    const STATUS_OUT = qs('#statusOut code');
+    const LOGIN_OUT = qs('#loginOut');
+    const TOKEN_INPUT = qs('#token');
+    const LIST_OUT = qs('#listOut');
+    const DETAIL_OUT = qs('#detailOut code');
+    const UPDATE_OUT = qs('#updateOut');
+
+    // Persist settings
+    function loadState(){
+      API_BASE_INPUT.value = localStorage.getItem('API_BASE') || '';
+      TOKEN_INPUT.value = localStorage.getItem('KGTK_TOKEN') || '';
+      qs('#admin_user').value = localStorage.getItem('KGTK_USER') || '';
+      qs('#admin_pass').value = localStorage.getItem('KGTK_PASS') || '';
+    }
+    function saveApiBase(){ localStorage.setItem('API_BASE', API_BASE_INPUT.value.trim()); }
+    function saveToken(tok){ localStorage.setItem('KGTK_TOKEN', tok||''); TOKEN_INPUT.value = tok||''; }
+    function saveCred(){
+      localStorage.setItem('KGTK_USER', qs('#admin_user').value);
+      localStorage.setItem('KGTK_PASS', qs('#admin_pass').value);
+    }
+
+    function api(){ const u = API_BASE_INPUT.value.trim(); if(!u) throw new Error('API_BASE kosong'); return u; }
+
+    async function ping(){
+      saveApiBase();
+      try{
+        const r = await fetch(api() + '?action=ping', { method: 'GET' });
+        const j = await r.json();
+        PING_OUT.textContent = j.ok ? ('Koneksi OK — ' + (j.build||'')) : (j.error||'gagal');
+      }catch(e){ PING_OUT.textContent = 'Gagal: ' + e.message; }
+    }
+
+    function asMeta(detail){
+      const kabkota = qs('#kabkota').value.trim();
+      const peran = qs('#peran').value.trim();
+      const tipe = qs('#tipeLaporan').value.trim();
+      const layanan = qs('#layanan').value.trim();
+      const metas = [];
+      if(kabkota) metas.push('[Meta] Kab/Kota: ' + kabkota);
+      if(peran) metas.push('[Meta] Peran: ' + peran);
+      if(tipe) metas.push('[Meta] Tipe Laporan: ' + tipe);
+      if(layanan) metas.push('[Meta] Layanan: ' + layanan);
+      return (detail ? detail.trim() : '') + (metas.length ? ('\n\n' + metas.join('\n')) : '');
+    }
+
+    function getJenis(){
+      const v = qs('input[name=jenis]:checked')?.value || 'pengaduan';
+      return v === 'permintaan' ? 'permintaan' : 'pengaduan';
+    }
+
+    function toggleJenis(){
+      const jenis = getJenis();
+      qs('#boxPengaduan').classList.toggle('hidden', jenis !== 'pengaduan');
+      qs('#boxPermintaan').classList.toggle('hidden', jenis !== 'permintaan');
+    }
+
+    function toBase64(file){
+      return new Promise((resolve,reject)=>{
         const fr = new FileReader();
-        fr.onload = () => {
-          const res = String(fr.result || "");
-          const comma = res.indexOf(",");
-          const base64 = comma >= 0 ? res.substring(comma+1) : res;
-          resolve({ name: file.name, type: file.type || "application/octet-stream", size: file.size, base64 });
+        fr.onload = ()=>{
+          const res = String(fr.result||'');
+          const comma = res.indexOf(',');
+          const b64 = comma>=0 ? res.slice(comma+1) : res;
+          resolve({ name: file.name, type: file.type, base64: b64 });
         };
-        fr.onerror = () => reject(fr.error || new Error("Gagal baca file"));
+        fr.onerror = ()=> reject(fr.error||new Error('gagal baca file'));
         fr.readAsDataURL(file);
       });
     }
-    async function collectFilesB64(inputEl){
-      const files = Array.from(inputEl.files || []);
-      const arr = [];
-      for (const f of files) arr.push(await fileToBase64(f));
-      return arr;
-    }
-    async function postJSONNoPreflight(payload){
-      const res = await fetch(withNoCache(API_BASE), {
-        method:"POST",
-        headers:{ "Content-Type":"text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      });
-      return res.json();
-    }
-    const spinner = '<svg class="animate-spin inline-block w-4 h-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>';
-    async function withBusy(btn, labelWhile, fn){
-      if(!btn) return fn();
-      const prev = btn.innerHTML;
-      const wasDisabled = btn.disabled;
-      btn.disabled = true;
-      btn.innerHTML = spinner + (labelWhile || "Memproses...");
-      try { return await fn(); }
-      finally { btn.disabled = wasDisabled; btn.innerHTML = prev; }
-    }
-    function toast(msg, ok=true){
-      const el = document.createElement("div");
-      el.className = "fixed z-50 left-1/2 -translate-x-1/2 top-4 px-4 py-2 rounded-lg text-sm text-white " + (ok?"bg-emerald-600":"bg-red-600");
-      el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .3s"; setTimeout(()=>el.remove(), 300); }, 1800);
-    }
-    function formatBytes(b){
-      if(!b && b!==0) return "-";
-      const u=["B","KB","MB","GB"]; let i=0; let n=b;
-      while(n>=1024 && i<u.length-1){ n/=1024; i++; }
-      return n.toFixed(1)+" "+u[i];
-    }
-    function escapeHtml(s){
-      return String(s||"").replace(/[&<>"']/g, function(c){
-        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);
-      });
-    }
-  </script>
 
-  <header class="bg-blue-800 text-white">
-    <div class="container mx-auto px-4 py-6 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg" alt="Kemendikbud" class="w-12 h-12 bg-white rounded-full p-1"/>
-        <div>
-          <h1 class="text-xl font-bold">Kantor Guru dan Tenaga Kependidikan Provinsi Maluku Utara</h1>
-          <p class="text-blue-100 text-sm">Layanan Informasi dan Pengaduan</p>
-        </div>
-      </div>
-      <div class="flex gap-2">
-        <button id="trackBtn" class="btn bg-white text-blue-700 px-4 py-2 rounded-lg font-medium hover:bg-blue-50">Lacak Status</button>
-        <button id="adminBtn" class="btn bg-yellow-500 px-4 py-2 rounded-lg font-medium hover:bg-yellow-600">Admin</button>
-        <button id="pingBtn" class="btn bg-emerald-600 px-4 py-2 rounded-lg font-medium hover:bg-emerald-700">Tes Koneksi</button>
-      </div>
-    </div>
-  </header>
+    async function submitForm(){
+      saveApiBase();
+      SUBMIT_OUT.textContent = 'Mengirim…';
+      const jenis = getJenis();
+      const payload = {
+        action: 'submit',
+        type: jenis,
+        nama: qs('#nama').value.trim(),
+        email: qs('#email').value.trim(),
+        telepon: qs('#telepon').value.trim(),
+        judul: qs('#judul').value.trim(),
+        detail: asMeta(qs('#detail').value)
+      };
+      if(jenis === 'pengaduan'){
+        payload.kategori = qs('#kategori').value.trim();
+      } else {
+        payload.instansi = qs('#instansi').value.trim();
+        payload.jenisData = qs('#jenisData').value.trim();
+        payload.tujuan = qs('#tujuan').value.trim();
+      }
 
-  <main class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg card-shadow mb-8">
-      <div class="flex border-b">
-        <button id="layananTab" class="flex-1 py-4 px-6 text-center font-medium border-b-2 border-blue-600 text-blue-700 bg-blue-50">Form Layanan</button>
-        <button id="statusTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50">Cek Status</button>
-        <button id="adminTab" class="flex-1 py-4 px-6 text-center font-medium text-gray-600 hover:bg-gray-50 hidden">Admin Panel</button>
-      </div>
+      // lampiran
+      const files = qsa('#lampiran')[0].files;
+      if(files && files.length){
+        const arr = [];
+        for(const f of files){ arr.push(await toBase64(f)); }
+        payload.filesB64 = arr;
+      }
+      // surat resmi
+      const surat = qsa('#surat')[0]?.files?.[0];
+      if(jenis === 'permintaan' && surat){
+        payload.suratB64 = await toBase64(surat);
+      }
 
-      <!-- Form Layanan (gabungan) -->
-      <div id="layananContent" class="p-6 animate-fade">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Layanan</h2>
-        <form id="layananForm" class="space-y-6">
-          <div class="grid md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
-              <input id="nama" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-              <input id="email" type="email" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
-              <p class="text-xs text-gray-500 mt-1">
-                Pastikan Anda mencantumkan alamat email pribadi yang aktif untuk menerima balasan kami.
-                Pastikan kembali alamat email aktif yang dicantumkan tidak ada kesalahan penulisan.
-              </p>
-            </div>
-          </div>
-
-          <div class="grid md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon *</label>
-              <input id="telepon" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Kabupaten/Kota *</label>
-              <select id="kabkota" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">Pilih Kabupaten/Kota</option>
-                <option>Kabupaten Halmahera Barat</option>
-                <option>Kabupaten Halmahera Tengah</option>
-                <option>Kabupaten Halmahera Timur</option>
-                <option>Kabupaten Halmahera Selatan</option>
-                <option>Kabupaten Halmahera Utara</option>
-                <option>Kabupaten Kepulauan Sula</option>
-                <option>Kabupaten Pulau Morotai</option>
-                <option>Kabupaten Pulau Taliabu</option>
-                <option>Kota Ternate</option>
-                <option>Kota Tidore Kepulauan</option>
-                <option>Lainnya</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Peran *</label>
-              <select id="peran" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">Pilih Peran</option>
-                <option>Admin Sekolah</option>
-                <option>Dinas Pendidikan</option>
-                <option>Dosen</option>
-                <option>Guru</option>
-                <option>Kepala Sekolah</option>
-                <option>Plt. Kepala Sekolah</option>
-                <option>Lembaga Kursus dan Pelatihan</option>
-                <option>Mahasiswa</option>
-                <option>Operator Dapodik</option>
-                <option>Operator Dinas Lainnya</option>
-                <option>Operator Dinas Pendidikan</option>
-                <option>Operator Emis</option>
-                <option>Operator Sekolah / Yayasan</option>
-                <option>Orang Tua / Wali</option>
-                <option>Pengawas Sekolah</option>
-                <option>Perguruan Tinggi</option>
-                <option>Publik</option>
-                <option>Siswa</option>
-                <option>Staf Sekolah / Yayasan</option>
-                <option>Tenaga Pendidik Lainnya</option>
-                <option>Yayasan Pendidikan</option>
-                <option>Lainnya</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Laporan (Tipe) *</label>
-              <select id="tipeLaporan" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">Pilih Tipe</option>
-                <option>Pertanyaan & Informasi</option>
-                <option>Permintaan</option>
-                <option>Keluhan & Kendala</option>
-                <option>Aspirasi & Saran</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Layanan *</label>
-            <select id="layananJenis" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
-              <option value="">Pilih Layanan</option>
-              <option>Peningkatan Kompetensi</option>
-              <option>Fasilitasi</option>
-              <option>Kemitraan</option>
-              <option>Administrasi</option>
-              <option>Lainnya</option>
-            </select>
-          </div>
-
-          <!-- Khusus Keluhan & Kendala -->
-          <div id="secKeluhan" class="hidden">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Kategori (khusus keluhan)</label>
-              <select id="kategoriKeluhan" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">Pilih Kategori</option>
-                <option>Pelatihan Pembelajaran Mendalam</option>
-                <option>Pelatihan Koding & Kecerdasan Artifisial</option>
-                <option>Pelatihan BCKS</option>
-                <option>Pelatihan Numerasi</option>
-                <option>Pelatihan Literasi</option>
-                <option>Pelatihan Bahasa Inggris</option>
-                <option>Pelatihan Bimbingan Konseling</option>
-                <option>Pelatihan Pendidikan Khusus</option>
-                <option>Pelatihan Berjenjang PAUD</option>
-                <option>Pelatihan Profesi Guru</option>
-                <option>Pengelolaan Kinerja</option>
-                <option>Uji Kompetensi</option>
-                <option>Peningkatan Kualifikasi</option>
-                <option>KICAU</option>
-                <option>Lainnya</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Khusus Permintaan -->
-          <div id="secPermintaan" class="hidden">
-            <div class="grid md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Instansi/Organisasi *</label>
-                <input id="instansi" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Data *</label>
-                <input id="jenisData" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: Statistik Guru, Data Sekolah, ..."/>
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Tujuan Penggunaan Data *</label>
-              <textarea id="tujuan" rows="3" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Surat Permohonan Resmi (unggah dokumen) *</label>
-              <input id="suratFile" type="file" class="w-full px-4 py-3 border rounded-lg bg-white" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"/>
-              <p class="text-xs text-gray-500 mt-1">Unggah surat resmi (PDF disarankan). Maks 10MB.</p>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Judul *</label>
-            <input id="judul" required class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Ringkasan singkat topik Anda"/>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Uraian/Detail *</label>
-            <textarea id="detail" required rows="5" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Jelaskan detail kebutuhan/keluhan/pertanyaan Anda..."></textarea>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Berkas Pendukung (unggah, opsional)</label>
-            <input id="filesLayanan" type="file" multiple class="w-full px-4 py-3 border rounded-lg bg-white" 
-                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.zip"/>
-            <p class="text-xs text-gray-500 mt-1">Saran &lt; 10MB per file.</p>
-          </div>
-
-          <button class="btn w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">Kirim</button>
-        </form>
-      </div>
-
-      <!-- Cek Status -->
-      <div id="statusContent" class="p-6 hidden">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Lacak Status Pengajuan</h2>
-        <div class="max-w-md mx-auto">
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Tiket</label>
-            <div class="flex gap-2">
-              <input id="nomorTiket" class="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="GTKXXXXXXXXX"/>
-              <button id="cekStatusBtn" class="btn bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700">Cek Status</button>
-            </div>
-          </div>
-          <pre id="statusResult" class="hidden bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-auto"></pre>
-        </div>
-      </div>
-
-      <!-- Admin (detail + inline update + preview) -->
-      <div id="adminContent" class="p-6 hidden">
-        <div id="adminLogin" class="max-w-sm mx-auto">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login Admin</h2>
-          <form id="loginForm" class="space-y-4">
-            <input id="adminUser" placeholder="Username" class="w-full px-4 py-3 border rounded-lg" required/>
-            <input id="adminPass" type="password" placeholder="Password" class="w-full px-4 py-3 border rounded-lg" required/>
-            <button class="btn w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700">Login</button>
-          </form>
-          <p class="text-xs text-gray-500 mt-3 text-center">Kredensial diatur di Script Properties.</p>
-        </div>
-
-        <div id="adminDash" class="hidden">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold">Dashboard Admin</h2>
-            <div class="flex gap-2">
-              <button id="refreshBtn" class="btn bg-blue-600 text-white px-4 py-2 rounded-lg">Refresh</button>
-              <button id="logoutBtn" class="btn bg-red-600 text-white px-4 py-2 rounded-lg">Logout</button>
-            </div>
-          </div>
-
-          <div class="bg-gray-50 rounded-lg p-3 mb-3 grid md:grid-cols-3 gap-2">
-            <select id="filterType" class="px-3 py-2 border rounded-lg text-sm">
-              <option value="">Semua Jenis</option>
-              <option value="pengaduan">Pengaduan</option>
-              <option value="permintaan">Permintaan Data</option>
-            </select>
-            <select id="filterStatus" class="px-3 py-2 border rounded-lg text-sm">
-              <option value="">Semua Status</option>
-              <option value="diterima">Diterima</option>
-              <option value="diproses">Diproses</option>
-              <option value="selesai">Selesai</option>
-            </select>
-            <input id="searchInput" placeholder="Cari nama/email/tiket..." class="px-3 py-2 border rounded-lg text-sm"/>
-          </div>
-
-          <div class="bg-white rounded-lg overflow-hidden border">
-            <table class="w-full text-sm">
-              <thead class="bg-gray-100">
-                <tr>
-                  <th class="px-3 py-2 text-left">Tiket</th>
-                  <th class="px-3 py-2 text-left">Jenis</th>
-                  <th class="px-3 py-2 text-left">Nama</th>
-                  <th class="px-3 py-2 text-left">Email</th>
-                  <th class="px-3 py-2 text-left">Tanggal</th>
-                  <th class="px-3 py-2 text-left">Status</th>
-                  <th class="px-3 py-2 text-left">Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="dataTableBody"></tbody>
-            </table>
-            <div id="noDataMessage" class="text-center text-gray-500 py-6 hidden">Tidak ada data</div>
-          </div>
-
-          <!-- Detail + Inline Update -->
-          <dialog id="detailDialog" class="rounded-lg p-0 w-full max-w-4xl">
-            <form method="dialog" class="p-5 space-y-3">
-              <h3 class="text-xl font-semibold">Detail Pengajuan</h3>
-              <div id="detailBody" class="text-sm text-gray-800 space-y-2"></div>
-
-              <div id="inUpdSection" class="mt-6 border-t pt-4">
-                <h4 class="text-base font-semibold mb-2">Ubah Status</h4>
-                <input id="inUpdTicket" type="hidden"/>
-                <div class="grid md:grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-sm text-gray-600 mb-1">Status Baru</label>
-                    <select id="inUpdStatus" class="w-full px-3 py-2 border rounded-lg">
-                      <option value="diterima">Diterima</option>
-                      <option value="diproses">Sedang Diproses</option>
-                      <option value="selesai">Selesai</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-sm text-gray-600 mb-1">Dokumen Tambahan (URL publik, opsional)</label>
-                    <input id="inUpdDocUrl" class="w-full px-3 py-2 border rounded-lg" placeholder="https://..."/>
-                  </div>
-                </div>
-                <div class="mt-3">
-                  <label class="block text-sm text-gray-600 mb-1">Catatan *</label>
-                  <textarea id="inUpdNote" rows="3" class="w-full px-3 py-2 border rounded-lg" required></textarea>
-                </div>
-                <div class="flex justify-end gap-2 mt-3">
-                  <button id="inUpdSubmit" type="button" class="btn px-4 py-2 rounded bg-blue-600 text-white">Simpan Perubahan</button>
-                </div>
-              </div>
-
-              <menu class="flex gap-2 justify-end mt-3">
-                <button id="detailClose" type="button" class="px-4 py-2 rounded bg-blue-600 text-white">Tutup</button>
-              </menu>
-            </form>
-          </dialog>
-
-          <!-- Preview Modal -->
-          <dialog id="previewDialog" class="rounded-lg p-0 w-full max-w-5xl">
-            <form method="dialog" class="p-0">
-              <div class="flex items-center justify-between px-4 py-3 border-b">
-                <div class="font-semibold" id="pvTitle">Preview</div>
-                <button id="pvClose" type="button" class="px-3 py-1 rounded bg-gray-200">Tutup</button>
-              </div>
-              <div id="pvBody" class="p-0">
-                <div class="preview-wrap">
-                  <div class="preview-overlay text-gray-600 text-sm">
-                    <div class="flex items-center gap-2 bg-white/80 rounded px-3 py-2 shadow">
-                      <span class="inline-block" style="width:16px;height:16px;">
-                        <svg class="animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
-                      </span>
-                      <span>Menyiapkan pratinjau...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </dialog>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <footer class="bg-gray-900 text-white mt-10">
-    <div class="container mx-auto px-4 py-6 text-center text-sm text-gray-300">
-      © 2025 KGTK Maluku Utara
-    </div>
-  </footer>
-
-  <script>
-    // Tabs
-    const tabs = {
-      layanan: { tab: document.getElementById("layananTab"), content: document.getElementById("layananContent") },
-      status: { tab: document.getElementById("statusTab"), content: document.getElementById("statusContent") },
-      admin: { tab: document.getElementById("adminTab"), content: document.getElementById("adminContent") },
-    };
-    function switchTab(key){
-      Object.keys(tabs).forEach(k => {
-        const {tab, content} = tabs[k];
-        if(k===key){ tab.classList.add("border-b-2","border-blue-600","text-blue-700","bg-blue-50"); content.classList.remove("hidden"); }
-        else{ tab.classList.remove("border-b-2","border-blue-600","text-blue-700","bg-blue-50"); content.classList.add("hidden"); }
-      });
-    }
-    tabs.layanan.tab.onclick = () => switchTab("layanan");
-    tabs.status.tab.onclick = () => switchTab("status");
-    tabs.admin.tab.onclick = () => switchTab("admin");
-    document.getElementById("trackBtn").onclick = () => switchTab("status");
-    document.getElementById("adminBtn").onclick = () => { document.getElementById("adminTab").classList.remove("hidden"); switchTab("admin"); };
-
-    // Ping
-    document.getElementById("pingBtn").addEventListener("click", async (ev)=>{
-      const btn = ev.currentTarget;
-      await withBusy(btn, "Menghubungkan...", async ()=>{
-        try {
-          const res = await fetch(withNoCache(API_BASE + "?action=ping"));
-          const data = await res.json();
-          toast(data && data.ok ? `Koneksi OK. Build: ${data.build}` : "Ping gagal.", !!(data && data.ok));
-        } catch (e) {
-          toast("Ping gagal: " + e, false);
-        }
-      });
-    });
-
-    // Dynamic sections
-    const tipeEl = document.getElementById("tipeLaporan");
-    const secKeluhan = document.getElementById("secKeluhan");
-    const secPermintaan = document.getElementById("secPermintaan");
-    const instansiEl = document.getElementById("instansi");
-    const jenisDataEl = document.getElementById("jenisData");
-    const tujuanEl = document.getElementById("tujuan");
-    const suratFileEl = document.getElementById("suratFile");
-    const kategoriKeluhanEl = document.getElementById("kategoriKeluhan");
-
-    function updateTipeUI(){
-      const tipe = tipeEl.value;
-      const isPermintaan = (tipe === "Permintaan");
-      const isKeluhan = (tipe === "Keluhan & Kendala");
-      secPermintaan.classList.toggle("hidden", !isPermintaan);
-      secKeluhan.classList.toggle("hidden", !isKeluhan);
-      [instansiEl, jenisDataEl, tujuanEl, suratFileEl].forEach(el => { if(!el) return; el.required = isPermintaan; });
-      if (kategoriKeluhanEl) kategoriKeluhanEl.required = isKeluhan;
-    }
-    tipeEl.addEventListener("change", updateTipeUI);
-    updateTipeUI();
-
-    function val(id){ return document.getElementById(id)?.value?.trim() || ""; }
-
-    function buildDetailWithMeta(baseDetail){
-      const meta = [
-        ["Kab/Kota", val("kabkota")],
-        ["Peran", val("peran")],
-        ["Tipe Laporan", document.getElementById("tipeLaporan").value],
-        ["Layanan", document.getElementById("layananJenis").value]
-      ].map(([k,v]) => `[Meta] ${k}: ${v}`).join("
-");
-      return meta + "
-
-" + baseDetail;
-    }
-    function deriveType(){
-      return (document.getElementById("tipeLaporan").value === "Permintaan") ? "permintaan" : "pengaduan";
-    }
-
-    // Submit
-    document.getElementById("layananForm").addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const btn = e.submitter;
-      await withBusy(btn, "Mengirim...", async ()=>{
-        const filesB64 = await collectFilesB64(document.getElementById("filesLayanan"));
-        const tipe = document.getElementById("tipeLaporan").value;
-        const isPermintaan = (tipe === "Permintaan");
-        const isKeluhan = (tipe === "Keluhan & Kendala");
-
-        let suratB64 = null;
-        if (isPermintaan && suratFileEl && suratFileEl.files && suratFileEl.files[0]) {
-          suratB64 = await fileToBase64(suratFileEl.files[0]);
-        }
-
-        const basePayload = {
-          action: "submit",
-          type: deriveType(),
-          nama: val("nama"),
-          email: val("email"),
-          telepon: val("telepon"),
-          judul: val("judul"),
-          detail: buildDetailWithMeta(val("detail")),
-          filesB64
-        };
-        if (isKeluhan) basePayload.kategori = document.getElementById("kategoriKeluhan").value;
-        if (isPermintaan) {
-          basePayload.instansi = val("instansi");
-          basePayload.jenisData = val("jenisData");
-          basePayload.tujuan = val("tujuan");
-          if (suratB64) basePayload.suratB64 = suratB64;
-        }
-        let data;
-        try { data = await postJSONNoPreflight(basePayload); }
-        catch(err){ toast("Gagal mengirim ke server.", false); return; }
-        if (data.error) { toast(data.error, false); return; }
-        toast("Berhasil dikirim. Nomor tiket: " + data.ticket, true);
-        document.getElementById("layananForm").reset();
-        updateTipeUI();
-        switchTab("status"); document.getElementById("nomorTiket").value = data.ticket;
-      });
-    });
-
-    // Cek Status
-    document.getElementById("cekStatusBtn").onclick = async (ev)=>{
-      const btn = ev.currentTarget;
-      await withBusy(btn, "Mencari...", async ()=>{
-        const ticket = document.getElementById("nomorTiket").value.trim();
-        if(!ticket) { toast("Masukkan nomor tiket.", false); return; }
-        let data;
-        try {
-          const res = await fetch(withNoCache(API_BASE + "?action=status&ticket=" + encodeURIComponent(ticket)));
-          data = await res.json();
-        } catch(e){ toast("Gagal menghubungi server.", false); return; }
-        if(data.error) { toast(data.error || "Tiket tidak ditemukan.", false); return; }
-        const pretty = JSON.stringify(data, null, 2);
-        const box = document.getElementById("statusResult");
-        box.textContent = pretty; box.classList.remove("hidden");
-      });
-    };
-
-    // Admin
-    let ADMIN_TOKEN = "";
-    document.getElementById("loginForm").addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const btn = e.submitter;
-      await withBusy(btn, "Masuk...", async ()=>{
-        let data;
-        try {
-          data = await postJSONNoPreflight({ action:"admin_login", user: val("adminUser"), pass: val("adminPass") });
-        } catch(e1) { toast("Gagal membaca respons server.", false); return; }
-        if(data.error) { toast(data.error || "Login gagal.", false); return; }
-        ADMIN_TOKEN = data.token;
-        document.getElementById("adminLogin").classList.add("hidden");
-        document.getElementById("adminDash").classList.remove("hidden");
-        await loadAdmin();
-      });
-    });
-    document.getElementById("logoutBtn").onclick = ()=>{
-      ADMIN_TOKEN = ""; document.getElementById("adminDash").classList.add("hidden"); document.getElementById("adminLogin").classList.remove("hidden");
-    };
-    document.getElementById("refreshBtn").onclick = (ev)=> withBusy(ev.currentTarget, "Muat ulang...", loadAdmin);
-    document.getElementById("filterType").onchange = ()=> loadAdmin();
-    document.getElementById("filterStatus").onchange = ()=> loadAdmin();
-    document.getElementById("searchInput").oninput = ()=>{ loadAdmin(250); };
-
-    let searchDelay;
-    async function loadAdmin(delay=0){
-      clearTimeout(searchDelay);
-      searchDelay = setTimeout(async ()=>{
-        const params = new URLSearchParams({
-          action: "admin_list",
-          token: ADMIN_TOKEN,
-          type: document.getElementById("filterType").value,
-          status: document.getElementById("filterStatus").value,
-          q: document.getElementById("searchInput").value.trim(),
+      try{
+        const r = await fetch(api(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
         });
-        let data;
-        try {
-          const res = await fetch(withNoCache(API_BASE + "?" + params.toString()));
-          data = await res.json();
-        } catch(e1) { toast("Gagal membaca respons server.", false); return; }
-        if(data.error) { toast(data.error || "Gagal memuat data.", false); return; }
-        renderTable(data.items || []);
-      }, delay);
-    }
-
-    function renderTable(items){
-      const tbody = document.getElementById("dataTableBody");
-      const noData = document.getElementById("noDataMessage");
-      if(!items.length){ tbody.innerHTML = ""; noData.classList.remove("hidden"); return; }
-      noData.classList.add("hidden");
-      tbody.innerHTML = items.map(it => {
-        const badge = it.status==="selesai" ? "bg-green-100 text-green-800" :
-                      it.status==="diproses" ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800";
-        return `<tr class="hover:bg-gray-50">
-          <td class="px-3 py-2 font-mono text-blue-700">${it.ticket}</td>
-          <td class="px-3 py-2">${it.type}</td>
-          <td class="px-3 py-2 font-medium">${it.nama}</td>
-          <td class="px-3 py-2">${it.email}</td>
-          <td class="px-3 py-2">${it.date}</td>
-          <td class="px-3 py-2"><span class="px-2 py-1 rounded ${badge} text-xs">${it.status}</span></td>
-          <td class="px-3 py-2"><button class="btn text-blue-600 text-xs underline" onclick="openDetail('${it.ticket}', event)">Detail</button></td>
-        </tr>`;
-      }).join("");
-    }
-
-    // Detail & Inline Update
-    const dlgDetail = document.getElementById("detailDialog");
-    document.getElementById("detailClose").onclick = () => dlgDetail.close();
-    let CURRENT_DETAIL_TICKET = "";
-
-    async function loadDetail(ticket){
-      const params = new URLSearchParams({ action:"admin_detail", token: ADMIN_TOKEN, ticket });
-      let data;
-      try {
-        const res = await fetch(withNoCache(API_BASE + "?" + params.toString()));
-        data = await res.json();
-      } catch(e){ toast("Gagal memuat detail.", false); return; }
-      if(data.error){ toast(data.error, false); return; }
-
-      const files = (data.files||[]).map(f=>{
-        const id = f.id || "";
-        const mime = (f.mime || "").toLowerCase();
-        const usePreview = !!id;
-        return `<li class="mb-1 flex items-center gap-2">
-          <a class="text-blue-700 underline" href="${f.viewUrl}" target="_blank" rel="noopener">${escapeHtml(f.name || f.id)}</a>
-          <span class="text-gray-400 text-xs">(${formatBytes(f.size)})</span>
-          ${usePreview?`<button type="button" class="btn text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300" onclick="previewFile('${id}','${mime}','${escapeHtml(f.name||"")}', event)">Preview</button>`:""}
-        </li>`;
-      }).join("") || "<li class='text-gray-500'>Tidak ada berkas</li>";
-
-      const historyHtml = (data.history||[]).map(h=>`<li class="mb-1"><span class="font-medium">${h.status}</span> — <span class="text-gray-600">${new Date(h.timestamp).toLocaleString("id-ID")}</span><div class="text-gray-700">${escapeHtml(h.note||"")}</div></li>`).join("") || "<li class='text-gray-500'>Belum ada riwayat</li>";
-
-      document.getElementById("detailBody").innerHTML = `
-        <div class="grid md:grid-cols-2 gap-4">
-          <div>
-            <div><span class="text-gray-500">Tiket:</span> <span class="font-mono">${data.ticket}</span></div>
-            <div><span class="text-gray-500">Jenis:</span> ${data.type}</div>
-            <div><span class="text-gray-500">Status:</span> <span id="detailStatusTxt">${data.status}</span></div>
-            <div><span class="text-gray-500">Tanggal:</span> ${new Date(data.timestamp).toLocaleString("id-ID")}</div>
-          </div>
-          <div>
-            <div><span class="text-gray-500">Nama:</span> ${escapeHtml(data.nama||"")}</div>
-            <div><span class="text-gray-500">Email:</span> ${escapeHtml(data.email||"")}</div>
-            <div><span class="text-gray-500">Telepon:</span> ${escapeHtml(data.telepon||"")}</div>
-            ${data.instansi?`<div><span class="text-gray-500">Instansi:</span> ${escapeHtml(data.instansi)}</div>`:""}
-          </div>
-        </div>
-        ${data.kategori?`<div class="mt-2"><span class="text-gray-500">Kategori:</span> ${escapeHtml(data.kategori)}</div>`:""}
-        ${data.judul?`<div class="mt-2"><span class="text-gray-500">Judul:</span> ${escapeHtml(data.judul)}</div>`:""}
-        <div class="mt-2">
-          <div class="text-gray-500">Detail:</div>
-          <pre class="bg-gray-50 border rounded p-2 whitespace-pre-wrap">${escapeHtml(data.detail||"")}</pre>
-        </div>
-        ${data.jenisData?`<div class="mt-2"><span class="text-gray-500">Jenis Data:</span> ${escapeHtml(data.jenisData)}</div>`:""}
-        ${data.tujuan?`<div class="mt-2"><span class="text-gray-500">Tujuan:</span> ${escapeHtml(data.tujuan)}</div>`:""}
-        ${data.suratUrl?`<div class="mt-2"><span class="text-gray-500">Surat Resmi:</span> <a class="text-blue-700 underline" href="${data.suratUrl}" target="_blank" rel="noopener">${data.suratUrl}</a></div>`:""}
-        <div class="mt-4">
-          <div class="font-semibold mb-1">Berkas Terunggah</div>
-          <ul class="list-disc pl-5">${files}</ul>
-          ${data.folderUrl?`<div class="mt-2"><a class="text-indigo-700 underline" target="_blank" rel="noopener" href="${data.folderUrl}">Buka Folder Tiket di Drive</a></div>`:""}
-        </div>
-        <div class="mt-4">
-          <div class="font-semibold mb-1">Riwayat Status</div>
-          <ul class="list-disc pl-5">${historyHtml}</ul>
-        </div>
-      `;
-
-      document.getElementById('inUpdTicket').value = data.ticket;
-      document.getElementById('inUpdStatus').value = data.status;
-      document.getElementById('inUpdDocUrl').value = '';
-      document.getElementById('inUpdNote').value = '';
-    }
-
-    async function openDetail(ticket, ev){
-      const btn = ev?.currentTarget;
-      await withBusy(btn || {disabled:false, innerHTML:''}, "Membuka...", async ()=>{
-        document.getElementById("detailBody").innerHTML = '<div class="text-gray-600 text-sm">'+spinner+' Memuat detail...</div>';
-        const dlgDetail = document.getElementById("detailDialog");
-        if (!dlgDetail.open) dlgDetail.showModal();
-        window.CURRENT_DETAIL_TICKET = ticket;
-        await loadDetail(ticket);
-        const submitBtn = document.getElementById('inUpdSubmit');
-        if (!submitBtn.dataset.bound) {
-          submitBtn.addEventListener('click', inlineUpdate);
-          submitBtn.dataset.bound = '1';
+        const j = await r.json();
+        if(j.ok){
+          SUBMIT_OUT.textContent = 'Berhasil. Nomor tiket: ' + j.ticket;
+          qs('#ticket').value = j.ticket;
+        } else {
+          SUBMIT_OUT.textContent = 'Gagal: ' + (j.error||'unknown');
         }
-      });
+      }catch(e){
+        SUBMIT_OUT.textContent = 'Error: ' + e.message;
+      }
     }
 
-    async function inlineUpdate(ev){
-      ev && ev.preventDefault && ev.preventDefault();
-      const btn = ev?.currentTarget;
-      await withBusy(btn, 'Menyimpan...', async ()=>{
-        const payload = {
-          action: 'admin_update',
-          token: ADMIN_TOKEN,
-          ticket: document.getElementById('inUpdTicket').value,
-          newStatus: document.getElementById('inUpdStatus').value,
-          note: document.getElementById('inUpdNote').value.trim(),
-          docUrl: document.getElementById('inUpdDocUrl').value.trim(),
-        };
-        let data;
-        try { data = await postJSONNoPreflight(payload); }
-        catch(e1){ toast('Gagal membaca respons server.', false); return; }
-        if (data.error){ toast(data.error || 'Gagal update.', false); return; }
-        await loadAdmin();
-        if (window.CURRENT_DETAIL_TICKET){ await loadDetail(window.CURRENT_DETAIL_TICKET); }
-        toast('Status diperbarui & email terkirim.', true);
-      });
+    async function cekStatus(){
+      saveApiBase();
+      const t = qs('#ticket').value.trim();
+      if(!t){ STATUS_OUT.textContent = 'Masukkan nomor tiket.'; return; }
+      try{
+        const r = await fetch(api() + '?action=status&ticket=' + encodeURIComponent(t));
+        const j = await r.json();
+        STATUS_OUT.textContent = JSON.stringify(j, null, 2);
+      }catch(e){
+        STATUS_OUT.textContent = 'Error: ' + e.message;
+      }
     }
 
-    // Preview
-    const dlgPreview = document.getElementById("previewDialog");
-    document.getElementById("pvClose").onclick = (e)=>{ e.preventDefault(); e.stopPropagation(); dlgPreview.close(); };
-    dlgPreview.addEventListener("cancel", (e)=>{ e.preventDefault(); dlgPreview.close(); });
-    window.previewFile = (id, mime, name, ev) => {
-      if (ev) { try { ev.preventDefault(); ev.stopPropagation(); } catch(_){} }
-      const wrap = document.querySelector("#pvBody .preview-wrap");
-      const overlay = wrap.querySelector(".preview-overlay");
-      const oldIframe = wrap.querySelector("iframe.preview-iframe");
-      if (oldIframe) oldIframe.remove();
-      document.getElementById("pvTitle").textContent = String(name || "Preview").replace(/[<>]/g,"");
-      dlgPreview.showModal();
-      const iframe = document.createElement("iframe");
-      iframe.className = "preview-iframe";
-      iframe.src = "https://drive.google.com/file/d/" + encodeURIComponent(id) + "/preview";
-      iframe.title = name || "preview";
-      iframe.setAttribute("allow", "autoplay; fullscreen");
-      iframe.setAttribute("referrerpolicy", "no-referrer");
-      iframe.loading = "eager";
-      iframe.addEventListener("load", () => { overlay.style.display = "none"; }, { once: true });
-      iframe.addEventListener("error", () => {
-        overlay.innerHTML = '<div class="p-4 text-sm text-red-700 bg-white/90 rounded shadow">Pratinjau gagal dimuat. <a class="underline text-blue-700" target="_blank" rel="noopener" href="https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view">Buka di tab baru</a></div>';
-      }, { once: true });
-      overlay.style.display = "flex";
-      wrap.appendChild(iframe);
-    };
+    async function login(){
+      saveApiBase(); saveCred();
+      LOGIN_OUT.textContent = 'Login…';
+      try{
+        const r = await fetch(api(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action:'admin_login', user: qs('#admin_user').value.trim(), pass: qs('#admin_pass').value.trim() })
+        });
+        const j = await r.json();
+        if(j.ok){ saveToken(j.token); LOGIN_OUT.textContent = 'Login OK'; }
+        else { LOGIN_OUT.textContent = 'Gagal: ' + (j.error||'unknown'); }
+      }catch(e){
+        LOGIN_OUT.textContent = 'Error: ' + e.message;
+      }
+    }
 
+    function logout(){ saveToken(''); LOGIN_OUT.textContent = 'Logout OK'; }
+
+    async function listAdmin(){
+      saveApiBase();
+      const tok = TOKEN_INPUT.value.trim();
+      if(!tok){ LIST_OUT.innerHTML = '<div class="muted">Belum login.</div>'; return; }
+      const p = new URLSearchParams();
+      p.set('action','admin_list');
+      p.set('token', tok);
+      const t = qs('#fltType').value.trim(); if(t) p.set('type', t);
+      const s = qs('#fltStatus').value.trim(); if(s) p.set('status', s);
+      const q = qs('#fltQ').value.trim(); if(q) p.set('q', q);
+      try{
+        const r = await fetch(api() + '?' + p.toString());
+        const j = await r.json();
+        if(j.error){ LIST_OUT.innerHTML = '<div class="muted">Error: '+j.error+'</div>'; return; }
+        const items = j.items||[];
+        if(!items.length){ LIST_OUT.innerHTML = '<div class="muted">Tidak ada data.</div>'; return; }
+        const html = items.map(it => `
+          <div class="row" style="grid-template-columns: 100px 1fr 1fr 1fr 120px;">
+            <div><span class="pill">${it.type}</span></div>
+            <div><strong>${it.ticket}</strong></div>
+            <div>${it.nama}</div>
+            <div>${it.email}</div>
+            <div>${it.date}<br/><small>${it.status}</small></div>
+          </div>
+        `).join('');
+        LIST_OUT.innerHTML = '<div class="sep"></div>' + html;
+      }catch(e){
+        LIST_OUT.innerHTML = '<div class="muted">Error: '+e.message+'</div>';
+      }
+    }
+
+    function listReset(){
+      qs('#fltType').value = '';
+      qs('#fltStatus').value = '';
+      qs('#fltQ').value = '';
+      LIST_OUT.innerHTML = '';
+    }
+
+    async function ambilDetail(){
+      saveApiBase();
+      const tok = TOKEN_INPUT.value.trim();
+      const ticket = qs('#dt_ticket').value.trim();
+      if(!tok){ DETAIL_OUT.textContent = 'Belum login.'; return; }
+      if(!ticket){ DETAIL_OUT.textContent = 'Isi tiket.'; return; }
+      const p = new URLSearchParams();
+      p.set('action','admin_detail');
+      p.set('token', tok);
+      p.set('ticket', ticket);
+      try{
+        const r = await fetch(api() + '?' + p.toString());
+        const j = await r.json();
+        DETAIL_OUT.textContent = JSON.stringify(j, null, 2);
+        // Prefill untuk Update
+        qs('#up_ticket').value = ticket;
+      }catch(e){
+        DETAIL_OUT.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function updateStatus(){
+      saveApiBase();
+      UPDATE_OUT.textContent = 'Memperbarui…';
+      const tok = TOKEN_INPUT.value.trim();
+      if(!tok){ UPDATE_OUT.textContent = 'Belum login.'; return; }
+      const payload = {
+        action: 'admin_update',
+        token: tok,
+        ticket: qs('#up_ticket').value.trim(),
+        newStatus: qs('#up_status').value.trim(),
+        note: qs('#up_note').value.trim(),
+        docUrl: qs('#up_doc').value.trim()
+      };
+      if(!payload.ticket){ UPDATE_OUT.textContent = 'Isi tiket.'; return; }
+      if(!payload.note){ UPDATE_OUT.textContent = 'Catatan wajib diisi.'; return; }
+      try{
+        const r = await fetch(api(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json();
+        UPDATE_OUT.textContent = j.ok ? 'OK' : ('Error: '+(j.error||'unknown'));
+      }catch(e){
+        UPDATE_OUT.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    // listeners
+    qs('#btnPing').addEventListener('click', ping);
+    qsa('input[name=jenis]').forEach(el => el.addEventListener('change', toggleJenis));
+    toggleJenis();
+
+    qs('#btnSubmit').addEventListener('click', submitForm);
+    qs('#btnStatus').addEventListener('click', cekStatus);
+
+    qs('#btnLogin').addEventListener('click', login);
+    qs('#btnLogout').addEventListener('click', logout);
+
+    qs('#btnList').addEventListener('click', listAdmin);
+    qs('#btnListReset').addEventListener('click', listReset);
+
+    qs('#btnDetail').addEventListener('click', ambilDetail);
+    qs('#btnUpdate').addEventListener('click', updateStatus);
+
+    loadState();
   </script>
 </body>
 </html>
